@@ -25,6 +25,7 @@ echo "### Server ###"
 check "server: tsc"      "$ROOT/server" npx tsc -b --noEmit
 check "server: eslint"   "$ROOT/server" npx eslint .
 check "server: prettier" "$ROOT/server" npx prettier --write .
+check "server: test"     "$ROOT/server" npx vitest run
 
 echo ""
 echo "### Client ###"
