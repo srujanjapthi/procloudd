@@ -1,1 +1,12 @@
+set -e
+
 npx lint-staged
+
+GITLEAKS_DIR="$(dirname "$0")/../.gitleaks-bin"
+if [ -x "$GITLEAKS_DIR/gitleaks.exe" ]; then
+  "$GITLEAKS_DIR/gitleaks.exe" git --staged
+elif [ -x "$GITLEAKS_DIR/gitleaks" ]; then
+  "$GITLEAKS_DIR/gitleaks" git --staged
+else
+  echo "gitleaks not installed locally — skipping local secret scan (CI will still check)."
+fi
