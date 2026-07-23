@@ -1,0 +1,53 @@
+@baseUrl = http://localhost:8000/api/v1
+
+### Send OTP (register)
+POST {{baseUrl}}/auth/otp/send
+Content-Type: application/json
+
+{
+  "email": "srujansjapthi@gmail.com",
+  "purpose": "register"
+}
+
+### Register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "srujan",
+  "name": {
+    "firstName": "Srujan",
+    "lastName": "S P"
+  },
+  "email": "srujansjapthi@gmail.com",
+  "password": "test1234",
+  "code": "8802"
+}
+
+### Send OTP (login)
+POST {{baseUrl}}/auth/otp/send
+Content-Type: application/json
+
+{
+  "email": "srujansjapthi@gmail.com",
+  "purpose": "login"
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "srujansjapthi@gmail.com",
+  "password": "test1234",
+  "code": "0000"
+}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+
+### Logout all devices
+POST {{baseUrl}}/auth/logout-all
+
+### Get current user (sanity check while logged in)
+GET {{baseUrl}}/users/me
