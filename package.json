@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "A private cloud storage application. This repository contains the full rebuild: a React client and an Express API, developed together as a monorepo.",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky && node scripts/install-gitleaks.js"
   },
   "license": "ISC",
   "devDependencies": {
