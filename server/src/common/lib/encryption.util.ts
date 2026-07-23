@@ -20,10 +20,11 @@ export function encrypt(plain: string): string {
 }
 
 export function decrypt(encrypted: string): string {
-  const [ivHex, authTagHex, ciphertextHex] = encrypted.split(":");
-  if (!ivHex || !authTagHex || !ciphertextHex) {
+  const parts = encrypted.split(":");
+  if (parts.length !== 3) {
     throw new Error("Malformed encrypted value");
   }
+  const [ivHex, authTagHex, ciphertextHex] = parts as [string, string, string];
 
   const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(ivHex, "hex"));
   decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
