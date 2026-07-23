@@ -1,0 +1,16 @@
+{
+  "name": "procloudd",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A private cloud storage application. This repository contains the full rebuild: a React client and an Express API, developed together as a monorepo.",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.1.1"
+  }
+}
