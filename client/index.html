@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var isDark =
+            stored === "dark" ||
+            (stored !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (isDark) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProCloudd</title>
+    <style>
+      :root {
+        --boot-bg: #ffffff;
+        --boot-fg: #0a0a0a;
+        --boot-muted: #737373;
+      }
+      :root.dark {
+        --boot-bg: #0a0a0a;
+        --boot-fg: #fafafa;
+        --boot-muted: #a3a3a3;
+      }
+      #boot-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--boot-bg);
+      }
+      #boot-loader .boot-logo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        font-family: "Geist Mono Variable", monospace;
+      }
+      #boot-loader .boot-logo svg {
+        width: 2.75rem;
+        height: 2rem;
+        color: var(--boot-fg);
+      }
+      #boot-loader .boot-text {
+        font-size: 1.875rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        background: linear-gradient(
+          90deg,
+          var(--boot-fg) 0%,
+          color-mix(in srgb, var(--boot-fg) 35%, transparent) 50%,
+          var(--boot-fg) 100%
+        );
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: boot-text-shimmer 1.8s ease-in-out infinite;
+      }
+      @keyframes boot-text-shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="boot-loader">
+        <div class="boot-logo">
+          <svg
+            viewBox="2 5 20 14"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
+              fill="currentColor"
+            />
+          </svg>
+          <span class="boot-text">ProCloudd</span>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

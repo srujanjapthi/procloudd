@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:8000/api/v1
+
+### Send OTP
+POST {{baseUrl}}/auth/otp/send
+Content-Type: application/json
+
+{
+  "email": "srujansjapthi@gmail.com",
+  "purpose": "register"
+}
+
+### Verify OTP
+POST {{baseUrl}}/auth/otp/verify
+Content-Type: application/json
+
+{
+  "email": "srujansjapthi@gmail.com",
+  "code": "6094",
+  "purpose": "register"
+}
