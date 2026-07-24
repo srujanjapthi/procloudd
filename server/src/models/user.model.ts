@@ -188,7 +188,10 @@ userSchema.index(
     "auth.providers.provider": 1,
     "auth.providers.providerId": 1,
   },
-  { unique: true }
+  {
+    unique: true,
+    partialFilterExpression: { "auth.providers.0": { $exists: true } },
+  }
 );
 
 userSchema.pre("save", async function () {
