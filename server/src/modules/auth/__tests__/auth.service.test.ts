@@ -19,7 +19,7 @@ import {
   enableTwoFactor,
   generateTotpCode,
   seedOtp,
-} from "./fixtures.js";
+} from "@/test/fixtures.js";
 
 vi.mock("@/common/auth/providers/google.provider.js", () => ({
   default: { provider: "google", verify: vi.fn() },

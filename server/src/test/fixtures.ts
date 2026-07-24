@@ -91,10 +91,18 @@ export async function createSessions(
     sessionIds.push(await Sessions.createSession(userId.toString()));
   }
 
-  for (let attempt = 0; attempt < 20; attempt++) {
+  const expected = new Set(sessionIds);
+  let stableChecks = 0;
+  for (let attempt = 0; attempt < 40 && stableChecks < 3; attempt++) {
     const sessions = await Sessions.listUserSessions(userId.toString());
-    if (sessions.length >= count) break;
-    await new Promise((resolve) => setTimeout(resolve, 25));
+    const actual = new Set(sessions.map((session) => session.sessionId));
+    const matches =
+      actual.size === expected.size &&
+      [...expected].every((id) => actual.has(id));
+    stableChecks = matches ? stableChecks + 1 : 0;
+    if (stableChecks < 3) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
   }
 
   return sessionIds;
