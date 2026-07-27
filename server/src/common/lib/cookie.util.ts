@@ -4,7 +4,7 @@ import { isProduction } from "@/common/utils/node-env.util.js";
 const baseCookieOptions: CookieOptions = {
   httpOnly: true,
   signed: true,
-  sameSite: "lax",
+  sameSite: isProduction() ? "none" : "lax",
   secure: isProduction(),
 };
 
