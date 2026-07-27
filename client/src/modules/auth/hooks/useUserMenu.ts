@@ -1,25 +1,12 @@
-import { useState } from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 
-export function useUserMenu(onOpenSettings: () => void) {
+export function useUserMenu() {
   const { isMobile, setOpenMobile } = useSidebar();
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
-  function openSettings() {
+  function closeSidebarThen(action: () => void) {
     setOpenMobile(false);
-    onOpenSettings();
+    action();
   }
 
-  function openLogoutDialog() {
-    setOpenMobile(false);
-    setLogoutDialogOpen(true);
-  }
-
-  return {
-    isMobile,
-    openSettings,
-    logoutDialogOpen,
-    setLogoutDialogOpen,
-    openLogoutDialog,
-  };
+  return { isMobile, closeSidebarThen };
 }

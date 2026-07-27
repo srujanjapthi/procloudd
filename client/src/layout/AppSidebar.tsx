@@ -25,9 +25,13 @@ const NAV_ITEMS = [
 
 interface AppSidebarProps {
   onOpenSettings: () => void;
+  onRequestLogout: () => void;
 }
 
-export function AppSidebar({ onOpenSettings }: AppSidebarProps) {
+export function AppSidebar({
+  onOpenSettings,
+  onRequestLogout,
+}: AppSidebarProps) {
   const location = useLocation();
   const { user } = useAuth();
 
@@ -72,7 +76,13 @@ export function AppSidebar({ onOpenSettings }: AppSidebarProps) {
         <SidebarSeparator className="mx-0" />
         <SidebarMenu>
           <SidebarMenuItem>
-            {user && <UserMenu user={user} onOpenSettings={onOpenSettings} />}
+            {user && (
+              <UserMenu
+                user={user}
+                onOpenSettings={onOpenSettings}
+                onRequestLogout={onRequestLogout}
+              />
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
