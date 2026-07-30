@@ -14,6 +14,7 @@ export function createNodemailerSender(config: NodemailerConfig): EmailSender {
     host: config.host,
     port: config.port,
     auth: { user: config.user, pass: config.password },
+    secure: config.port === 465,
   });
 
   return {
