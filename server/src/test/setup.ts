@@ -10,6 +10,7 @@ const TEST_ENV: Record<string, string> = {
   GITHUB_OAUTH_STATE_SECRET: "test-github-oauth-state-secret",
   TOTP_ENCRYPTION_KEY:
     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  EMAIL_PROVIDER: "nodemailer",
   NODEMAILER_HOST: "smtp.example.com",
   NODEMAILER_PORT: "587",
   NODEMAILER_USER: "test-smtp-user",

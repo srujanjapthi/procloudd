@@ -14,9 +14,6 @@
     "lib": ["ES2024"],
     "types": ["node"],
 
-    /* Output */
-    "sourceMap": true,
-
     /* Type Checking */
     "strict": true,
     "noUncheckedIndexedAccess": true,
