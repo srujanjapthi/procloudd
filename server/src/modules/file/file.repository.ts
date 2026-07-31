@@ -67,6 +67,14 @@ export function countTrashRootFiles(userId: Types.ObjectId) {
   });
 }
 
+export function findAllTrashRootFiles(userId: Types.ObjectId) {
+  return File.find({
+    userId,
+    status: "trashed",
+    trashedAt: { $exists: true },
+  }).lean();
+}
+
 export async function rename(
   id: Types.ObjectId,
   baseName: string,

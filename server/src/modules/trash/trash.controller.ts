@@ -14,3 +14,12 @@ export async function listTrash(
   const { meta, ...contents } = await TrashService.listTrash(userId, query);
   ApiResponse.success(res, contents, { meta });
 }
+
+export async function emptyTrash(
+  req: TypedRequest,
+  res: Response
+): Promise<void> {
+  const userId = new mongoose.Types.ObjectId(req.user!.id);
+  await TrashService.emptyTrash(userId);
+  ApiResponse.success(res, null, { message: "Trash emptied" });
+}

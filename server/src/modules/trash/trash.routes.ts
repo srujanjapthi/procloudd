@@ -18,4 +18,12 @@ router.get(
   TrashController.listTrash
 );
 
+router.delete(
+  ROUTES.trash.list,
+  authenticate,
+  directoryOperationsLimiter,
+  directoryOperationsThrottle,
+  TrashController.emptyTrash
+);
+
 export default router;

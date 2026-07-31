@@ -2,6 +2,7 @@ import {
   ArrowUpDown,
   ArrowUpNarrowWide,
   ArrowDownNarrowWide,
+  Trash2,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ConfirmDialogContent } from "@/components/ConfirmDialogContent";
 import { useLoadMoreOnScroll } from "@/modules/drive/hooks/useLoadMoreOnScroll";
 import { useTrashPage } from "../hooks/useTrashPage";
 import type { TrashSortBy } from "../hooks/useTrashSort";
@@ -41,6 +44,10 @@ export default function TrashPage() {
     setSortBy,
     sortOrder,
     toggleSortOrder,
+    emptyTrash,
+    isEmptyingTrash,
+    isEmptyTrashConfirmOpen,
+    setIsEmptyTrashConfirmOpen,
   } = useTrashPage();
 
   const isRefetching = isFetching && !isLoading;
@@ -115,6 +122,32 @@ export default function TrashPage() {
               {sortOrder === "asc" ? "Sort ascending" : "Sort descending"}
             </TooltipContent>
           </Tooltip>
+          {!isEmpty && (
+            <AlertDialog
+              open={isEmptyTrashConfirmOpen}
+              onOpenChange={setIsEmptyTrashConfirmOpen}
+            >
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label="Empty trash"
+                  />
+                }
+              >
+                <Trash2 />
+                <span className="hidden md:inline">Empty trash</span>
+              </AlertDialogTrigger>
+              <ConfirmDialogContent
+                title="Empty trash?"
+                description={`${totalItems} ${totalItems === 1 ? "item" : "items"} will be permanently deleted. This can't be undone.`}
+                confirmLabel="Empty trash"
+                onConfirm={emptyTrash}
+                isConfirming={isEmptyingTrash}
+              />
+            </AlertDialog>
+          )}
         </div>
       </div>
 

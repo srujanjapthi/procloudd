@@ -1,8 +1,11 @@
 import type { Types } from "mongoose";
 import * as DirectoryRepository from "@/modules/directory/directory.repository.js";
 import * as FileRepository from "@/modules/file/file.repository.js";
-import { toDirectoryProfile } from "@/modules/directory/directory.service.js";
-import { toFileProfile } from "@/modules/file/file.service.js";
+import {
+  toDirectoryProfile,
+  hardDeleteDirectory,
+} from "@/modules/directory/directory.service.js";
+import { toFileProfile, hardDeleteFile } from "@/modules/file/file.service.js";
 import * as Pagination from "@/common/pagination/pagination.util.js";
 import type { ListTrashQuery } from "./trash.validator.js";
 
@@ -66,4 +69,29 @@ export async function listTrash(userId: Types.ObjectId, query: ListTrashQuery) {
       dirCount + fileCount
     ),
   };
+}
+
+export async function emptyTrash(userId: Types.ObjectId): Promise<void> {
+  const [allDirs, allFiles] = await Promise.all([
+    DirectoryRepository.findAllTrashRootDirectories(userId),
+    FileRepository.findAllTrashRootFiles(userId),
+  ]);
+
+  const dirRootIds = new Set(allDirs.map((dir) => dir._id.toString()));
+  const isNestedUnderAnotherRoot = (ancestorIds: Types.ObjectId[]): boolean =>
+    ancestorIds.some((id) => dirRootIds.has(id.toString()));
+
+  const outermostDirs = allDirs.filter(
+    (dir) => !isNestedUnderAnotherRoot(dir.ancestorIds)
+  );
+  const topLevelFiles = allFiles.filter(
+    (file) => !isNestedUnderAnotherRoot(file.ancestorIds)
+  );
+
+  for (const dir of outermostDirs) {
+    await hardDeleteDirectory(userId, dir._id);
+  }
+  for (const file of topLevelFiles) {
+    await hardDeleteFile(userId, file._id);
+  }
 }
