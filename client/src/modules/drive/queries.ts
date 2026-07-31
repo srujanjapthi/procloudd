@@ -58,7 +58,7 @@ function useInvalidateFiles() {
       queryKey: FILES_QUERY_KEY,
       predicate: (query) => !query.isActive(),
     });
-    return queryClient.invalidateQueries({ queryKey: FILES_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: FILES_QUERY_KEY });
   };
 }
 
