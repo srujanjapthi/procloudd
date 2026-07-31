@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AuthLayout } from "../layout/AuthLayout";
 import { SessionRow } from "../components/SessionRow";
 import { useSessionLimitPage } from "../hooks/useSessionLimitPage";
+import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import cloudSyncIllustration from "@/assets/illustrations/cloud-sync-animate.svg";
 import ROUTES from "@/constants/routes";
 
@@ -44,6 +45,10 @@ export default function SessionLimitPage() {
           />
         ))}
       </div>
+      <ProcessingOverlay
+        show={endingSessionId !== undefined}
+        message="Signing you in…"
+      />
     </AuthLayout>
   );
 }

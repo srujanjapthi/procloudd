@@ -3,10 +3,11 @@ import { GoogleLogin } from "@react-oauth/google";
 import { toast } from "react-hot-toast";
 import { useTheme } from "next-themes";
 import { useGoogleSignIn } from "../hooks/useGoogleSignIn";
+import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import APP_CONFIG from "@/constants/config";
 
 export function GoogleSignInButton() {
-  const { handleCredential } = useGoogleSignIn();
+  const { handleCredential, isProcessing } = useGoogleSignIn();
   const { resolvedTheme } = useTheme();
   const [oneTapEnabled, setOneTapEnabled] = useState(false);
 
@@ -29,6 +30,7 @@ export function GoogleSignInButton() {
         width={320}
         useOneTap={oneTapEnabled}
       />
+      <ProcessingOverlay show={isProcessing} />
     </div>
   );
 }

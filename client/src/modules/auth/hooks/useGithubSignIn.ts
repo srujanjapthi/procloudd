@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
@@ -30,13 +30,24 @@ export function useGithubSignIn() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const popupRef = useRef<Window | null>(null);
+  const pollRef = useRef<number | undefined>(undefined);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  function stopPolling() {
+    if (pollRef.current !== undefined) {
+      window.clearInterval(pollRef.current);
+      pollRef.current = undefined;
+    }
+  }
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
       if (event.origin !== window.location.origin) return;
       if (!isGithubOAuthMessage(event.data)) return;
 
+      stopPolling();
       popupRef.current?.close();
+      setIsProcessing(false);
 
       if (event.data.error || !event.data.result) {
         toast.error(event.data.error ?? "GitHub sign-in failed");
@@ -66,7 +77,10 @@ export function useGithubSignIn() {
     }
 
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      stopPolling();
+    };
   }, [navigate, queryClient]);
 
   async function handleClick() {
@@ -78,15 +92,25 @@ export function useGithubSignIn() {
       return;
     }
     popupRef.current = popup;
+    setIsProcessing(true);
 
     try {
       const url = await getGithubAuthorizeUrl();
       popup.location.href = url;
     } catch (error) {
       popup.close();
+      setIsProcessing(false);
       toast.error(getApiErrorMessage(error, "GitHub sign-in failed"));
+      return;
     }
+
+    pollRef.current = window.setInterval(() => {
+      if (popup.closed) {
+        stopPolling();
+        setIsProcessing(false);
+      }
+    }, 500);
   }
 
-  return { handleClick };
+  return { handleClick, isProcessing };
 }
