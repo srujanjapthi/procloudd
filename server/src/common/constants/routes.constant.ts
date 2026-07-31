@@ -69,6 +69,9 @@ const ROUTES = {
   trash: api.group("/trash", {
     list: "",
   }),
+  stats: api.group("/stats", {
+    storage: "/storage",
+  }),
 };
 
 export default ROUTES;
