@@ -31,6 +31,7 @@ export function useDirectoryContentsQuery(
         ? lastPage.meta.page + 1
         : undefined,
     enabled: Boolean(dirId),
+    placeholderData: keepPreviousData,
   });
 }
 

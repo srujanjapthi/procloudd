@@ -12,6 +12,7 @@ export function useDrivePage() {
   const {
     data,
     isLoading,
+    isFetching,
     isError,
     fetchNextPage,
     hasNextPage,
@@ -29,6 +30,7 @@ export function useDrivePage() {
     directories,
     files,
     isLoading,
+    isFetching,
     isError,
     isEmpty:
       !isLoading && !isError && directories.length === 0 && files.length === 0,

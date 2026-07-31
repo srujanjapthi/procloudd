@@ -11,6 +11,7 @@ import {
   ArrowDownNarrowWide,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -44,6 +45,7 @@ export default function DrivePage() {
     directories,
     files,
     isLoading,
+    isFetching,
     isError,
     isEmpty,
     totalItems,
@@ -69,6 +71,7 @@ export default function DrivePage() {
 
   const folderName =
     breadcrumb.length > 1 ? breadcrumb[breadcrumb.length - 1].name : "My Drive";
+  const isNavigatingFolder = isFetching && !isLoading;
 
   const sentinelRef = useLoadMoreOnScroll(
     loadMore,
@@ -94,7 +97,12 @@ export default function DrivePage() {
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
-        <div className="flex flex-wrap items-center gap-2">
+        <div
+          className={cn(
+            "flex flex-wrap items-center gap-2 transition-opacity",
+            isNavigatingFolder && "opacity-50"
+          )}
+        >
           <Breadcrumbs entries={breadcrumb} />
           {!isLoading && !isEmpty && totalItems !== undefined && (
             <span className="text-muted-foreground text-xs">
@@ -232,7 +240,12 @@ export default function DrivePage() {
       )}
 
       {!isLoading && !isError && !isEmpty && viewMode === "list" && (
-        <div className="flex flex-col">
+        <div
+          className={cn(
+            "flex flex-col transition-opacity",
+            isNavigatingFolder && "opacity-50"
+          )}
+        >
           <DriveList
             directories={directories}
             files={files}
@@ -244,7 +257,12 @@ export default function DrivePage() {
       )}
 
       {!isLoading && !isError && !isEmpty && viewMode === "grid" && (
-        <div className="flex flex-col gap-3">
+        <div
+          className={cn(
+            "flex flex-col gap-3 transition-opacity",
+            isNavigatingFolder && "opacity-50"
+          )}
+        >
           <DriveGrid
             directories={directories}
             files={files}
