@@ -15,3 +15,9 @@ export async function withTransaction<T>(
 export function isValidId(id: string): boolean {
   return mongoose.isValidObjectId(id);
 }
+
+export function sessionOption(
+  session: ClientSession | null
+): { session: ClientSession } | Record<string, never> {
+  return session ? { session } : {};
+}

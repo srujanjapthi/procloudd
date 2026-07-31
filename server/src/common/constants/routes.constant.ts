@@ -47,6 +47,23 @@ const ROUTES = {
     permanent: "/:id/permanent",
     forceLogout: "/:id/logout-all",
   }),
+  directories: api.group("/directories", {
+    create: "",
+    byId: "/:id",
+    contents: "/:id/contents",
+    move: "/:id/move",
+    duplicate: "/:id/duplicate",
+    permanent: "/:id/permanent",
+  }),
+  files: api.group("/files", {
+    uploadUrl: "/upload-url",
+    confirm: "",
+    byId: "/:id",
+    downloadUrl: "/:id/download-url",
+    move: "/:id/move",
+    copy: "/:id/copy",
+    permanent: "/:id/permanent",
+  }),
 };
 
 export default ROUTES;

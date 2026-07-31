@@ -20,6 +20,7 @@ export const {
   upload: uploadLimiter,
   fileOps: fileOperationsLimiter,
   directoryOps: directoryOperationsLimiter,
+  download: downloadLimiter,
   userMgmt: userManagementLimiter,
   availability: availabilityLimiter,
   read: readOperationsLimiter,

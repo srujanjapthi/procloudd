@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import User from "@/models/user.model.js";
 import type { User as UserDoc } from "@/models/user.model.js";
+import Directory from "@/models/directory.model.js";
+import type { Directory as DirectoryDoc } from "@/models/directory.model.js";
 import Otp from "@/models/otp.model.js";
 import type { OtpPurpose } from "@/models/otp.model.js";
 import * as CredentialHasher from "@/common/lib/credential-hasher.util.js";
@@ -45,6 +47,52 @@ export async function createTestUser(
   });
 
   return { doc: doc.toObject(), password };
+}
+
+export interface CreateTestDirectoryOptions {
+  name?: string;
+  parentDirId?: mongoose.Types.ObjectId | null;
+  ancestorIds?: mongoose.Types.ObjectId[];
+  sizeInBytes?: number;
+  status?: "active" | "trashed";
+  starred?: boolean;
+}
+
+export async function createTestDirectory(
+  userId: mongoose.Types.ObjectId,
+  options: CreateTestDirectoryOptions = {}
+): Promise<DirectoryDoc & { _id: mongoose.Types.ObjectId }> {
+  const doc = await Directory.create({
+    name: options.name ?? unique("dir"),
+    userId,
+    parentDirId: options.parentDirId ?? null,
+    ancestorIds: options.ancestorIds ?? [],
+    sizeInBytes: options.sizeInBytes ?? 0,
+    status: options.status ?? "active",
+    starred: options.starred ?? false,
+  });
+  return doc.toObject();
+}
+
+export interface TestUserWithRoot extends TestUser {
+  rootDirId: mongoose.Types.ObjectId;
+}
+
+export async function createTestUserWithRoot(
+  options: CreateTestUserOptions = {}
+): Promise<TestUserWithRoot> {
+  const { doc: user, password } = await createTestUser(options);
+  const root = await createTestDirectory(user._id, { name: "root" });
+  await User.updateOne(
+    { _id: user._id },
+    { $set: { "storage.rootDirId": root._id } }
+  );
+
+  return {
+    doc: { ...user, storage: { ...user.storage, rootDirId: root._id } },
+    password,
+    rootDirId: root._id,
+  };
 }
 
 export interface TwoFactorFixture {

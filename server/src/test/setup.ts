@@ -19,6 +19,10 @@ const TEST_ENV: Record<string, string> = {
   GOOGLE_CLIENT_ID: "test-google-client-id",
   GITHUB_CLIENT_ID: "test-github-client-id",
   GITHUB_CLIENT_SECRET: "test-github-client-secret",
+  AWS_REGION: "us-east-1",
+  AWS_ACCESS_KEY_ID: "test-aws-access-key-id",
+  AWS_SECRET_ACCESS_KEY: "test-aws-secret-access-key",
+  AWS_S3_BUCKET: "test-bucket",
 };
 
 for (const [key, value] of Object.entries(TEST_ENV)) {

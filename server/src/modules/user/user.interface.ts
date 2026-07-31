@@ -61,3 +61,7 @@ export interface UserProfile {
   lastLoginAt?: Date;
   twoFactorEnabled: boolean;
 }
+
+export interface CurrentUserProfile extends Omit<UserProfile, "storage"> {
+  storage: { rootDirId: string; maxStorageInBytes: number; usedBytes: number };
+}
