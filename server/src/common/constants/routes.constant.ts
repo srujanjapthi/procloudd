@@ -53,6 +53,7 @@ const ROUTES = {
     contents: "/:id/contents",
     move: "/:id/move",
     duplicate: "/:id/duplicate",
+    restore: "/:id/restore",
     permanent: "/:id/permanent",
   }),
   files: api.group("/files", {
@@ -62,7 +63,11 @@ const ROUTES = {
     downloadUrl: "/:id/download-url",
     move: "/:id/move",
     copy: "/:id/copy",
+    restore: "/:id/restore",
     permanent: "/:id/permanent",
+  }),
+  trash: api.group("/trash", {
+    list: "",
   }),
 };
 

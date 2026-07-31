@@ -51,7 +51,7 @@ export function useDirectoryPickerQuery(dirId: string) {
   });
 }
 
-function useInvalidateFiles() {
+export function useInvalidateFiles() {
   const queryClient = useQueryClient();
   return () => {
     queryClient.removeQueries({
@@ -111,11 +111,13 @@ export function useDuplicateDirectoryMutation() {
   });
 }
 
-function removeFromContentsCache(
-  old: InfiniteData<DirectoryContents> | undefined,
+export function removeFromContentsCache<
+  T extends { directories: { id: string }[]; files: { id: string }[] },
+>(
+  old: InfiniteData<T> | undefined,
   type: "directory" | "file",
   id: string
-): InfiniteData<DirectoryContents> | undefined {
+): InfiniteData<T> | undefined {
   if (!old) {
     return old;
   }

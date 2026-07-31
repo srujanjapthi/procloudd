@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import type { Types } from "mongoose";
 import * as FileRepository from "./file.repository.js";
 import * as DirectoryRepository from "@/modules/directory/directory.repository.js";
+import * as UserRepository from "@/modules/user/user.repository.js";
 import {
   assertOwnedActiveDirectory,
   assertQuotaAvailable,
@@ -32,6 +33,7 @@ export function toFileProfile(file: LeanFileDocument): FileProfile {
     mimeType: file.mimeType,
     parentDirId: file.parentDirId.toString(),
     starred: file.starred,
+    trashedAt: file.trashedAt,
     createdAt: file.createdAt,
     updatedAt: file.updatedAt,
   };
@@ -192,6 +194,52 @@ export async function trashFile(
       );
     }
   });
+}
+
+export async function restoreFile(
+  userId: Types.ObjectId,
+  fileId: Types.ObjectId
+): Promise<FileProfile> {
+  const file = await FileRepository.findTrashRootById(userId, fileId);
+  if (!file) {
+    throw AppError.notFound(
+      "File not found in trash. It may have already been restored or permanently deleted."
+    );
+  }
+
+  const user = await UserRepository.findById(userId);
+  if (!user) {
+    throw AppError.notFound("User not found");
+  }
+
+  const originalParent = await DirectoryRepository.findActiveById(
+    userId,
+    file.parentDirId
+  );
+  const parent =
+    originalParent ??
+    (await DirectoryRepository.findActiveById(userId, user.storage.rootDirId))!;
+  const newAncestorIds = [...parent.ancestorIds, parent._id];
+
+  await Db.withTransaction(async (session) => {
+    await FileRepository.restore(
+      userId,
+      fileId,
+      parent._id,
+      newAncestorIds,
+      session
+    );
+    if (file.sizeInBytes > 0) {
+      await DirectoryRepository.adjustSizes(
+        excludingRoot([parent._id, ...newAncestorIds], user.storage.rootDirId),
+        file.sizeInBytes,
+        session
+      );
+    }
+  });
+
+  const restored = await FileRepository.findActiveById(userId, fileId);
+  return toFileProfile(restored!);
 }
 
 export async function hardDeleteFile(

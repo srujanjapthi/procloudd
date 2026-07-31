@@ -6,6 +6,7 @@ export interface DirectoryProfile {
   parentDirId: string | null;
   sizeInBytes: number;
   starred: boolean;
+  trashedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -19,6 +20,7 @@ export interface FileProfile {
   mimeType: string;
   parentDirId: string;
   starred: boolean;
+  trashedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

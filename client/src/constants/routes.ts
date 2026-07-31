@@ -2,6 +2,7 @@ const ROUTES = {
   home: "/",
   dashboard: "/dashboard",
   drive: "/drive",
+  trash: "/trash",
   auth: {
     login: "/auth/login",
     register: "/auth/register",

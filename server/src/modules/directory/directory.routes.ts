@@ -64,6 +64,14 @@ router.post(
   DirectoryController.duplicateDirectory
 );
 
+router.patch(
+  ROUTES.directories.restore,
+  authenticate,
+  directoryOperationsLimiter,
+  directoryOperationsThrottle,
+  DirectoryController.restoreDirectory
+);
+
 router.delete(
   ROUTES.directories.byId,
   authenticate,

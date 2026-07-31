@@ -28,6 +28,7 @@ export interface DirectoryProfile {
   parentDirId: string | null;
   sizeInBytes: number;
   starred: boolean;
+  trashedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

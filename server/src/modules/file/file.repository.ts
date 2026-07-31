@@ -1,4 +1,4 @@
-import type { ClientSession, Types } from "mongoose";
+import type { ClientSession, SortOrder, Types } from "mongoose";
 import File from "@/models/file.model.js";
 import * as Db from "@/common/lib/db.util.js";
 import type { CreateFileInput } from "./file.interface.js";
@@ -39,6 +39,34 @@ export function findTrashedById(userId: Types.ObjectId, id: Types.ObjectId) {
   return File.findOne({ _id: id, userId, status: "trashed" }).lean();
 }
 
+export function findTrashRootById(userId: Types.ObjectId, id: Types.ObjectId) {
+  return File.findOne({
+    _id: id,
+    userId,
+    status: "trashed",
+    trashedAt: { $exists: true },
+  }).lean();
+}
+
+export function listTrashRootFiles(
+  userId: Types.ObjectId,
+  options: { sort: Record<string, SortOrder>; skip: number; limit: number }
+) {
+  return File.find({ userId, status: "trashed", trashedAt: { $exists: true } })
+    .sort(options.sort)
+    .skip(options.skip)
+    .limit(options.limit)
+    .lean();
+}
+
+export function countTrashRootFiles(userId: Types.ObjectId) {
+  return File.countDocuments({
+    userId,
+    status: "trashed",
+    trashedAt: { $exists: true },
+  });
+}
+
 export async function rename(
   id: Types.ObjectId,
   baseName: string,
@@ -72,6 +100,27 @@ export async function trash(
   await File.updateOne(
     { _id: id, userId },
     { $set: { status: "trashed", trashedAt: new Date() } },
+    Db.sessionOption(session)
+  );
+}
+
+export async function restore(
+  userId: Types.ObjectId,
+  id: Types.ObjectId,
+  newParentDirId: Types.ObjectId,
+  newAncestorIds: Types.ObjectId[],
+  session: ClientSession | null = null
+): Promise<void> {
+  await File.updateOne(
+    { _id: id, userId },
+    {
+      $set: {
+        status: "active",
+        parentDirId: newParentDirId,
+        ancestorIds: newAncestorIds,
+      },
+      $unset: { trashedAt: "" },
+    },
     Db.sessionOption(session)
   );
 }

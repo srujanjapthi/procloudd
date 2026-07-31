@@ -73,6 +73,15 @@ export async function trashDirectory(dirId: string): Promise<void> {
   await apiClient.delete<ApiSuccessResponse<null>>(`/directories/${dirId}`);
 }
 
+export async function restoreDirectory(
+  dirId: string
+): Promise<DirectoryProfile> {
+  const response = await apiClient.patch<ApiSuccessResponse<DirectoryProfile>>(
+    `/directories/${dirId}/restore`
+  );
+  return response.data.data;
+}
+
 export async function hardDeleteDirectory(dirId: string): Promise<void> {
   await apiClient.delete<ApiSuccessResponse<null>>(
     `/directories/${dirId}/permanent`
@@ -140,6 +149,13 @@ export async function copyFile(
 
 export async function trashFile(fileId: string): Promise<void> {
   await apiClient.delete<ApiSuccessResponse<null>>(`/files/${fileId}`);
+}
+
+export async function restoreFile(fileId: string): Promise<FileProfile> {
+  const response = await apiClient.patch<ApiSuccessResponse<FileProfile>>(
+    `/files/${fileId}/restore`
+  );
+  return response.data.data;
 }
 
 export async function hardDeleteFile(fileId: string): Promise<void> {

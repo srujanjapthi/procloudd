@@ -481,6 +481,207 @@ describe("trashDirectory", () => {
   });
 });
 
+describe("restoreDirectory", () => {
+  it("restores a trashed folder back under its still-active original parent", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const parent = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const child = await createTestDirectory(user._id, {
+      parentDirId: parent._id,
+      ancestorIds: [rootDirId, parent._id],
+    });
+    await DirectoryService.trashDirectory(user._id, child._id);
+
+    const restored = await DirectoryService.restoreDirectory(
+      user._id,
+      child._id
+    );
+
+    expect(restored.parentDirId).toBe(parent._id.toString());
+    const stored = await Directory.findById(child._id).lean();
+    expect(stored!.status).toBe("active");
+    expect(stored!.trashedAt).toBeUndefined();
+    expect(stored!.ancestorIds.map((id) => id.toString())).toEqual([
+      rootDirId.toString(),
+      parent._id.toString(),
+    ]);
+  });
+
+  it("restores swept descendants but keeps an independently-trashed subtree trashed", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const a = await createTestDirectory(user._id, {
+      name: "A",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const b = await createTestDirectory(user._id, {
+      name: "B",
+      parentDirId: a._id,
+      ancestorIds: [rootDirId, a._id],
+    });
+    const c = await createTestDirectory(user._id, {
+      name: "C",
+      parentDirId: b._id,
+      ancestorIds: [rootDirId, a._id, b._id],
+    });
+    const d = await createTestDirectory(user._id, {
+      name: "D",
+      parentDirId: c._id,
+      ancestorIds: [rootDirId, a._id, b._id, c._id],
+    });
+
+    await DirectoryService.trashDirectory(user._id, c._id);
+    await DirectoryService.trashDirectory(user._id, a._id);
+
+    await DirectoryService.restoreDirectory(user._id, a._id);
+
+    const storedA = await Directory.findById(a._id).lean();
+    expect(storedA!.status).toBe("active");
+    const storedB = await Directory.findById(b._id).lean();
+    expect(storedB!.status).toBe("active");
+    expect(storedB!.parentDirId!.toString()).toBe(a._id.toString());
+    const storedC = await Directory.findById(c._id).lean();
+    expect(storedC!.status).toBe("trashed");
+    expect(storedC!.trashedAt).toBeDefined();
+    const storedD = await Directory.findById(d._id).lean();
+    expect(storedD!.status).toBe("trashed");
+  });
+
+  it("falls back to the account root when the original parent is still trashed", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const a = await createTestDirectory(user._id, {
+      name: "A",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const b = await createTestDirectory(user._id, {
+      name: "B",
+      parentDirId: a._id,
+      ancestorIds: [rootDirId, a._id],
+    });
+    const c = await createTestDirectory(user._id, {
+      name: "C",
+      parentDirId: b._id,
+      ancestorIds: [rootDirId, a._id, b._id],
+    });
+    const d = await createTestDirectory(user._id, {
+      name: "D",
+      parentDirId: c._id,
+      ancestorIds: [rootDirId, a._id, b._id, c._id],
+    });
+
+    await DirectoryService.trashDirectory(user._id, c._id);
+    await DirectoryService.trashDirectory(user._id, a._id);
+
+    const restored = await DirectoryService.restoreDirectory(user._id, c._id);
+
+    expect(restored.parentDirId).toBe(rootDirId.toString());
+    const storedC = await Directory.findById(c._id).lean();
+    expect(storedC!.ancestorIds.map((id) => id.toString())).toEqual([
+      rootDirId.toString(),
+    ]);
+    const storedD = await Directory.findById(d._id).lean();
+    expect(storedD!.status).toBe("active");
+    expect(storedD!.ancestorIds.map((id) => id.toString())).toEqual([
+      rootDirId.toString(),
+      c._id.toString(),
+    ]);
+  });
+
+  it("reattaches under the original parent if it is restored first", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const a = await createTestDirectory(user._id, {
+      name: "A",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const b = await createTestDirectory(user._id, {
+      name: "B",
+      parentDirId: a._id,
+      ancestorIds: [rootDirId, a._id],
+    });
+    const c = await createTestDirectory(user._id, {
+      name: "C",
+      parentDirId: b._id,
+      ancestorIds: [rootDirId, a._id, b._id],
+    });
+
+    await DirectoryService.trashDirectory(user._id, c._id);
+    await DirectoryService.trashDirectory(user._id, a._id);
+
+    await DirectoryService.restoreDirectory(user._id, a._id);
+    const restoredC = await DirectoryService.restoreDirectory(user._id, c._id);
+
+    expect(restoredC.parentDirId).toBe(b._id.toString());
+    const storedC = await Directory.findById(c._id).lean();
+    expect(storedC!.ancestorIds.map((id) => id.toString())).toEqual([
+      rootDirId.toString(),
+      a._id.toString(),
+      b._id.toString(),
+    ]);
+  });
+
+  it("re-adds size to ancestors on restore but leaves root untouched", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    await Directory.updateOne(
+      { _id: rootDirId },
+      { $set: { sizeInBytes: 100 } }
+    );
+    const parent = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+      sizeInBytes: 100,
+    });
+    const child = await createTestDirectory(user._id, {
+      parentDirId: parent._id,
+      ancestorIds: [rootDirId, parent._id],
+      sizeInBytes: 100,
+    });
+
+    await DirectoryService.trashDirectory(user._id, child._id);
+    const afterTrash = await Directory.findById(parent._id).lean();
+    expect(afterTrash!.sizeInBytes).toBe(0);
+
+    await DirectoryService.restoreDirectory(user._id, child._id);
+
+    const afterRestore = await Directory.findById(parent._id).lean();
+    expect(afterRestore!.sizeInBytes).toBe(100);
+    const root = await Directory.findById(rootDirId).lean();
+    expect(root!.sizeInBytes).toBe(100);
+  });
+
+  it("throws 404 for a folder that is not in trash", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const active = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+
+    await expect(
+      DirectoryService.restoreDirectory(user._id, active._id)
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it("throws 404 for a swept descendant that has no independent trashedAt", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const parent = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const child = await createTestDirectory(user._id, {
+      parentDirId: parent._id,
+      ancestorIds: [rootDirId, parent._id],
+    });
+    await DirectoryService.trashDirectory(user._id, parent._id);
+
+    await expect(
+      DirectoryService.restoreDirectory(user._id, child._id)
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
 describe("hardDeleteDirectory", () => {
   it("permanently deletes a trashed folder, its descendants, and their S3 objects, and frees quota usage", async () => {
     const { rootDirId, doc: user } = await createTestUserWithRoot();

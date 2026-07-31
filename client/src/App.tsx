@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import HomePage from "@/pages/HomePage";
 import DashboardPage from "@/pages/DashboardPage";
 import DrivePage from "@/modules/drive/pages/DrivePage";
+import TrashPage from "@/modules/trash/pages/TrashPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import LoginPage from "@/modules/auth/pages/LoginPage";
 import RegisterPage from "@/modules/auth/pages/RegisterPage";
@@ -25,6 +26,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/drive" element={<DrivePage />} />
             <Route path="/drive/:folderId" element={<DrivePage />} />
+            <Route path="/trash" element={<TrashPage />} />
           </Route>
         </Route>
         <Route path="/auth" element={<GuestRoute />}>
