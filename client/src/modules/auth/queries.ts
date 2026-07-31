@@ -44,7 +44,13 @@ export function useForgotPasswordMutation() {
 }
 
 export function useChangePasswordMutation() {
-  return useMutation({ mutationFn: AuthApi.changePassword });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: AuthApi.changePassword,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSIONS_QUERY_KEY });
+    },
+  });
 }
 
 export function useUpdateProfileMutation() {
@@ -73,12 +79,21 @@ export function useDisableTwoFactorMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: AuthApi.disableTwoFactor,
-    onSuccess: () => refreshCurrentUser(queryClient),
+    onSuccess: () => {
+      refreshCurrentUser(queryClient);
+      queryClient.invalidateQueries({ queryKey: SESSIONS_QUERY_KEY });
+    },
   });
 }
 
 export function useRegenerateRecoveryCodesMutation() {
-  return useMutation({ mutationFn: AuthApi.regenerateRecoveryCodes });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: AuthApi.regenerateRecoveryCodes,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SESSIONS_QUERY_KEY });
+    },
+  });
 }
 
 export function useCheckOtpMutation() {
