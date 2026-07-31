@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ConfirmDialogContent } from "@/components/ConfirmDialogContent";
 import { SessionRow } from "@/modules/auth/components/SessionRow";
+import { SessionRowSkeleton } from "@/modules/auth/components/SessionRowSkeleton";
 import { useSessionsList } from "@/modules/auth/hooks/useSessionsList";
 
 interface SessionsListProps {
@@ -20,7 +21,12 @@ export function SessionsList({
     useSessionsList();
 
   if (isLoading) {
-    return <p className="text-muted-foreground text-sm">Loading sessions…</p>;
+    return (
+      <div className="space-y-2">
+        <SessionRowSkeleton />
+        <SessionRowSkeleton />
+      </div>
+    );
   }
 
   if (isError) {
