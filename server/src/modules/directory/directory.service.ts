@@ -40,7 +40,7 @@ export function toDirectoryProfile(
     parentDirId: dir.parentDirId ? dir.parentDirId.toString() : null,
     sizeInBytes: dir.sizeInBytes,
     starred: dir.starred,
-    trashedAt: dir.trashedAt,
+    ...(dir.trashedAt !== undefined && { trashedAt: dir.trashedAt }),
     createdAt: dir.createdAt,
     updatedAt: dir.updatedAt,
   };

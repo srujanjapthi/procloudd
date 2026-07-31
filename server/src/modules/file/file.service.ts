@@ -33,7 +33,7 @@ export function toFileProfile(file: LeanFileDocument): FileProfile {
     mimeType: file.mimeType,
     parentDirId: file.parentDirId.toString(),
     starred: file.starred,
-    trashedAt: file.trashedAt,
+    ...(file.trashedAt !== undefined && { trashedAt: file.trashedAt }),
     createdAt: file.createdAt,
     updatedAt: file.updatedAt,
   };
