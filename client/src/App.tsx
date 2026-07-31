@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router";
 import { Toaster } from "react-hot-toast";
 import HomePage from "@/pages/HomePage";
-import DashboardPage from "@/pages/DashboardPage";
+import DashboardPage from "@/modules/dashboard/pages/DashboardPage";
 import DrivePage from "@/modules/drive/pages/DrivePage";
 import TrashPage from "@/modules/trash/pages/TrashPage";
 import NotFoundPage from "@/pages/NotFoundPage";

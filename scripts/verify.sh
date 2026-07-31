@@ -1,6 +1,7 @@
 #!/bin/bash
-# Runs tsc/eslint/prettier for both server and client, plus a client
-# production build, and prints a summary. Exits non-zero if anything failed.
+# Runs tsc/eslint/prettier for both server and client, plus a real
+# production build for each, and prints a summary. Exits non-zero if
+# anything failed.
 
 set -uo pipefail
 
@@ -26,6 +27,7 @@ check "server: tsc"      "$ROOT/server" npx tsc -b --noEmit
 check "server: eslint"   "$ROOT/server" npx eslint .
 check "server: prettier" "$ROOT/server" npx prettier --write .
 check "server: test"     "$ROOT/server" npx vitest run
+check "server: build"    "$ROOT/server" npm run build
 
 echo ""
 echo "### Client ###"

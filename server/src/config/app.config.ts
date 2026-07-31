@@ -52,6 +52,9 @@ const AppConfig = {
   storage: {
     defaultMaxStorageInBytes: 1 * 1024 ** 3,
   },
+  stats: {
+    largestFilesLimit: 10,
+  },
 } as const;
 
 export default AppConfig;
