@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { LayoutDashboard, HardDrive } from "lucide-react";
+import { LayoutDashboard, HardDrive, Trash2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +24,7 @@ import ROUTES from "@/constants/routes";
 const NAV_ITEMS = [
   { title: "Dashboard", url: ROUTES.dashboard, icon: LayoutDashboard },
   { title: "My Drive", url: ROUTES.drive, icon: HardDrive },
+  { title: "Trash", url: ROUTES.trash, icon: Trash2 },
 ];
 
 interface AppSidebarProps {

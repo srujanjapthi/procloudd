@@ -31,13 +31,16 @@ const FILE_SORT_FIELDS = {
   sizeInBytes: "sizeInBytes",
 } as const;
 
-function toDirectoryProfile(dir: LeanDirectoryDocument): DirectoryProfile {
+export function toDirectoryProfile(
+  dir: LeanDirectoryDocument
+): DirectoryProfile {
   return {
     id: dir._id.toString(),
     name: dir.name,
     parentDirId: dir.parentDirId ? dir.parentDirId.toString() : null,
     sizeInBytes: dir.sizeInBytes,
     starred: dir.starred,
+    trashedAt: dir.trashedAt,
     createdAt: dir.createdAt,
     updatedAt: dir.updatedAt,
   };
@@ -260,6 +263,57 @@ export async function trashDirectory(
       );
     }
   });
+}
+
+export async function restoreDirectory(
+  userId: Types.ObjectId,
+  dirId: Types.ObjectId
+): Promise<DirectoryProfile> {
+  const dir = await DirectoryRepository.findTrashRootById(userId, dirId);
+  if (!dir) {
+    throw AppError.notFound(
+      "Directory not found in trash. It may have already been restored or permanently deleted."
+    );
+  }
+
+  const user = await UserRepository.findById(userId);
+  if (!user) {
+    throw AppError.notFound("User not found");
+  }
+
+  const originalParent = dir.parentDirId
+    ? await DirectoryRepository.findActiveById(userId, dir.parentDirId)
+    : null;
+  const parent =
+    originalParent ??
+    (await DirectoryRepository.findActiveById(userId, user.storage.rootDirId))!;
+  const newAncestorIds = [...parent.ancestorIds, parent._id];
+
+  await Db.withTransaction(async (session) => {
+    await DirectoryRepository.restoreWithCascade(
+      userId,
+      dirId,
+      parent._id,
+      newAncestorIds,
+      session
+    );
+    await DirectoryRepository.cascadeAncestorIdsOnMove(
+      dirId,
+      dir.ancestorIds,
+      newAncestorIds,
+      session
+    );
+    if (dir.sizeInBytes > 0) {
+      await DirectoryRepository.adjustSizes(
+        excludingRoot([parent._id, ...newAncestorIds], user.storage.rootDirId),
+        dir.sizeInBytes,
+        session
+      );
+    }
+  });
+
+  const restored = await DirectoryRepository.findActiveById(userId, dirId);
+  return toDirectoryProfile(restored!);
 }
 
 export async function hardDeleteDirectory(

@@ -90,6 +90,16 @@ export async function trashDirectory(
   ApiResponse.success(res, null, { message: "Folder moved to trash" });
 }
 
+export async function restoreDirectory(
+  req: TypedRequest<{ params: { id: string } }>,
+  res: Response
+): Promise<void> {
+  const userId = new mongoose.Types.ObjectId(req.user!.id);
+  const dirId = new mongoose.Types.ObjectId(req.params.id);
+  const dir = await DirectoryService.restoreDirectory(userId, dirId);
+  ApiResponse.success(res, dir, { message: "Folder restored successfully" });
+}
+
 export async function hardDeleteDirectory(
   req: TypedRequest<{ params: { id: string } }>,
   res: Response

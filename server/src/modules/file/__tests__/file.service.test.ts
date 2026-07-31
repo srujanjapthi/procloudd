@@ -16,6 +16,7 @@ import {
 import Directory from "@/models/directory.model.js";
 import File from "@/models/file.model.js";
 import * as FileService from "../file.service.js";
+import * as DirectoryService from "@/modules/directory/directory.service.js";
 
 vi.mock("@/services/storage.service.js", () => ({
   default: {
@@ -298,6 +299,109 @@ describe("trashFile", () => {
 
     await expect(
       FileService.trashFile(user._id, new mongoose.Types.ObjectId())
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
+describe("restoreFile", () => {
+  it("restores a trashed file back under its still-active original parent", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const folder = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const file = await createTestFile(user._id, {
+      parentDirId: folder._id,
+      ancestorIds: [rootDirId, folder._id],
+    });
+    await FileService.trashFile(user._id, file._id);
+
+    const restored = await FileService.restoreFile(user._id, file._id);
+
+    expect(restored.parentDirId).toBe(folder._id.toString());
+    const stored = await File.findById(file._id).lean();
+    expect(stored!.status).toBe("active");
+    expect(stored!.trashedAt).toBeUndefined();
+    expect(stored!.ancestorIds.map((id) => id.toString())).toEqual([
+      rootDirId.toString(),
+      folder._id.toString(),
+    ]);
+  });
+
+  it("falls back to the account root when the original parent is still trashed", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const folder = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const file = await createTestFile(user._id, {
+      parentDirId: folder._id,
+      ancestorIds: [rootDirId, folder._id],
+    });
+    await FileService.trashFile(user._id, file._id);
+    await DirectoryService.trashDirectory(user._id, folder._id);
+
+    const restored = await FileService.restoreFile(user._id, file._id);
+
+    expect(restored.parentDirId).toBe(rootDirId.toString());
+    const stored = await File.findById(file._id).lean();
+    expect(stored!.ancestorIds.map((id) => id.toString())).toEqual([
+      rootDirId.toString(),
+    ]);
+  });
+
+  it("re-adds size to the parent folder on restore but leaves root untouched", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    await Directory.updateOne(
+      { _id: rootDirId },
+      { $set: { sizeInBytes: 300 } }
+    );
+    const folder = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+      sizeInBytes: 300,
+    });
+    const file = await createTestFile(user._id, {
+      sizeInBytes: 300,
+      parentDirId: folder._id,
+      ancestorIds: [rootDirId, folder._id],
+    });
+    await FileService.trashFile(user._id, file._id);
+
+    await FileService.restoreFile(user._id, file._id);
+
+    const restoredFolder = await Directory.findById(folder._id).lean();
+    expect(restoredFolder!.sizeInBytes).toBe(300);
+    const root = await Directory.findById(rootDirId).lean();
+    expect(root!.sizeInBytes).toBe(300);
+  });
+
+  it("throws 404 for a file that is not in trash", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const file = await createTestFile(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+
+    await expect(
+      FileService.restoreFile(user._id, file._id)
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it("throws 404 for a file swept by a parent folder trash, with no independent trashedAt", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const folder = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const file = await createTestFile(user._id, {
+      parentDirId: folder._id,
+      ancestorIds: [rootDirId, folder._id],
+    });
+    await DirectoryService.trashDirectory(user._id, folder._id);
+
+    await expect(
+      FileService.restoreFile(user._id, file._id)
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

@@ -61,6 +61,15 @@ export function findTrashedById(userId: Types.ObjectId, id: Types.ObjectId) {
   return Directory.findOne({ _id: id, userId, status: "trashed" }).lean();
 }
 
+export function findTrashRootById(userId: Types.ObjectId, id: Types.ObjectId) {
+  return Directory.findOne({
+    _id: id,
+    userId,
+    status: "trashed",
+    trashedAt: { $exists: true },
+  }).lean();
+}
+
 export function findNamesByIds(userId: Types.ObjectId, ids: Types.ObjectId[]) {
   return Directory.find({ userId, _id: { $in: ids } })
     .select("_id name")
@@ -84,6 +93,29 @@ export function countActiveChildDirectories(
   parentDirId: Types.ObjectId
 ) {
   return Directory.countDocuments({ userId, parentDirId, status: "active" });
+}
+
+export function listTrashRootDirectories(
+  userId: Types.ObjectId,
+  options: { sort: Record<string, SortOrder>; skip: number; limit: number }
+) {
+  return Directory.find({
+    userId,
+    status: "trashed",
+    trashedAt: { $exists: true },
+  })
+    .sort(options.sort)
+    .skip(options.skip)
+    .limit(options.limit)
+    .lean();
+}
+
+export function countTrashRootDirectories(userId: Types.ObjectId) {
+  return Directory.countDocuments({
+    userId,
+    status: "trashed",
+    trashedAt: { $exists: true },
+  });
 }
 
 export async function rename(
@@ -194,6 +226,64 @@ export async function trashWithCascade(
   await File.updateMany(
     { userId, ancestorIds: id, status: "active" },
     { $set: { status: "trashed" } },
+    { session }
+  );
+}
+
+export async function restoreWithCascade(
+  userId: Types.ObjectId,
+  id: Types.ObjectId,
+  newParentDirId: Types.ObjectId,
+  newAncestorIds: Types.ObjectId[],
+  session: ClientSession
+): Promise<void> {
+  await Directory.updateOne(
+    { _id: id, userId },
+    {
+      $set: {
+        status: "active",
+        parentDirId: newParentDirId,
+        ancestorIds: newAncestorIds,
+      },
+      $unset: { trashedAt: "" },
+    },
+    { session }
+  );
+
+  const trappedRoots = await Directory.find({
+    userId,
+    ancestorIds: id,
+    trashedAt: { $exists: true },
+  })
+    .select("_id")
+    .session(session)
+    .lean();
+  const trappedIds = trappedRoots.map((root) => root._id);
+
+  await Directory.updateMany(
+    {
+      $and: [
+        { userId },
+        { ancestorIds: id },
+        { status: "trashed" },
+        { _id: { $nin: trappedIds } },
+        { ancestorIds: { $nin: trappedIds } },
+      ],
+    },
+    { $set: { status: "active" } },
+    { session }
+  );
+  await File.updateMany(
+    {
+      $and: [
+        { userId },
+        { ancestorIds: id },
+        { status: "trashed" },
+        { trashedAt: { $exists: false } },
+        { ancestorIds: { $nin: trappedIds } },
+      ],
+    },
+    { $set: { status: "active" } },
     { session }
   );
 }

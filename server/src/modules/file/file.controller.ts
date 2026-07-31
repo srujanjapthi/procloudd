@@ -80,6 +80,16 @@ export async function trashFile(
   ApiResponse.success(res, null, { message: "File moved to trash" });
 }
 
+export async function restoreFile(
+  req: TypedRequest<{ params: { id: string } }>,
+  res: Response
+): Promise<void> {
+  const userId = new mongoose.Types.ObjectId(req.user!.id);
+  const fileId = new mongoose.Types.ObjectId(req.params.id);
+  const file = await FileService.restoreFile(userId, fileId);
+  ApiResponse.success(res, file, { message: "File restored successfully" });
+}
+
 export async function hardDeleteFile(
   req: TypedRequest<{ params: { id: string } }>,
   res: Response

@@ -11,6 +11,7 @@ import authRoutes from "@/modules/auth/auth.routes.js";
 import twoFactorRoutes from "@/modules/twofactor/twofactor.routes.js";
 import directoryRoutes from "@/modules/directory/directory.routes.js";
 import fileRoutes from "@/modules/file/file.routes.js";
+import trashRoutes from "@/modules/trash/trash.routes.js";
 import env from "@/config/env.config.js";
 
 const app = express();
@@ -35,6 +36,7 @@ app.use(authRoutes);
 app.use(twoFactorRoutes);
 app.use(directoryRoutes);
 app.use(fileRoutes);
+app.use(trashRoutes);
 
 app.use(errorMiddleware);
 

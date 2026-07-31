@@ -79,6 +79,14 @@ router.post(
   FileController.copyFile
 );
 
+router.patch(
+  ROUTES.files.restore,
+  authenticate,
+  fileOperationsLimiter,
+  fileOperationsThrottle,
+  FileController.restoreFile
+);
+
 router.delete(
   ROUTES.files.byId,
   authenticate,

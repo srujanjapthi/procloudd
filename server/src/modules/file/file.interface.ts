@@ -24,6 +24,7 @@ export interface FileProfile {
   mimeType: string;
   parentDirId: string;
   starred: boolean;
+  trashedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
