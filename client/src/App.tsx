@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router";
 import { Toaster } from "react-hot-toast";
 import HomePage from "@/pages/HomePage";
 import DashboardPage from "@/pages/DashboardPage";
+import DrivePage from "@/modules/drive/pages/DrivePage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import LoginPage from "@/modules/auth/pages/LoginPage";
 import RegisterPage from "@/modules/auth/pages/RegisterPage";
@@ -22,6 +23,8 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/drive" element={<DrivePage />} />
+            <Route path="/drive/:folderId" element={<DrivePage />} />
           </Route>
         </Route>
         <Route path="/auth" element={<GuestRoute />}>

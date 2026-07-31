@@ -34,7 +34,7 @@ export default function AppLayout() {
           <SidebarTrigger className="-ml-1" />
           <ModeToggle />
         </header>
-        <main className="flex flex-1 flex-col p-6">
+        <main className="flex flex-1 flex-col p-4 sm:p-6">
           <Outlet />
         </main>
       </SidebarInset>

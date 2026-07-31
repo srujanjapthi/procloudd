@@ -65,6 +65,11 @@ export const rateLimiterPolicies = {
     max: 50,
     message: "Too many directory operations, please slow down.",
   },
+  download: {
+    windowMs: Duration.toMs("1m"),
+    max: 100,
+    message: "Too many downloads, please slow down.",
+  },
   userMgmt: {
     windowMs: Duration.toMs("15m"),
     max: 50,

@@ -155,7 +155,9 @@ export interface CurrentUser {
     };
   };
   storage: {
+    rootDirId: string;
     maxStorageInBytes: number;
+    usedBytes: number;
   };
   lastLoginAt?: string;
   twoFactorEnabled: boolean;

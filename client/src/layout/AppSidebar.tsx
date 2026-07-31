@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router";
-import { LayoutDashboard } from "lucide-react";
+import { Link } from "react-router";
+import { LayoutDashboard, HardDrive } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,11 +16,14 @@ import {
 } from "@/components/ui/sidebar";
 import { AppLogo } from "@/components/AppLogo";
 import { UserMenu } from "@/modules/auth/components/UserMenu";
+import { StorageUsageWidget } from "@/modules/drive/components/StorageUsageWidget";
 import { useAuth } from "@/modules/auth/context/AuthContext";
+import { useAppSidebar } from "./hooks/useAppSidebar";
 import ROUTES from "@/constants/routes";
 
 const NAV_ITEMS = [
   { title: "Dashboard", url: ROUTES.dashboard, icon: LayoutDashboard },
+  { title: "My Drive", url: ROUTES.drive, icon: HardDrive },
 ];
 
 interface AppSidebarProps {
@@ -32,8 +35,8 @@ export function AppSidebar({
   onOpenSettings,
   onRequestLogout,
 }: AppSidebarProps) {
-  const location = useLocation();
   const { user } = useAuth();
+  const { isActive, closeMobileSidebar } = useAppSidebar();
 
   return (
     <Sidebar collapsible="icon">
@@ -43,6 +46,7 @@ export function AppSidebar({
             <SidebarMenuButton
               size="lg"
               render={<Link to={ROUTES.dashboard} />}
+              onClick={closeMobileSidebar}
             >
               <AppLogo size="sm" />
             </SidebarMenuButton>
@@ -59,8 +63,9 @@ export function AppSidebar({
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     render={<Link to={item.url} />}
-                    isActive={location.pathname === item.url}
+                    isActive={isActive(item.url)}
                     tooltip={item.title}
+                    onClick={closeMobileSidebar}
                   >
                     <item.icon />
                     <span>{item.title}</span>
@@ -73,6 +78,14 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {user && (
+          <div className="group-data-[collapsible=icon]:hidden">
+            <StorageUsageWidget
+              usedBytes={user.storage.usedBytes}
+              maxStorageInBytes={user.storage.maxStorageInBytes}
+            />
+          </div>
+        )}
         <SidebarSeparator className="mx-0" />
         <SidebarMenu>
           <SidebarMenuItem>

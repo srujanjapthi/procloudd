@@ -1,5 +1,6 @@
 import type { ClientSession } from "mongoose";
 import * as UserRepository from "./user.repository.js";
+import * as DirectoryRepository from "@/modules/directory/directory.repository.js";
 import LocalProvider from "@/common/auth/providers/local.provider.js";
 import AppError from "@/common/error/app.error.js";
 import * as MongoError from "@/common/error/mongo.error.js";
@@ -15,6 +16,7 @@ import type {
   AuthenticatedCredentials,
   AvailabilityResult,
   UserProfile,
+  CurrentUserProfile,
   LeanUserDocument,
 } from "./user.interface.js";
 import type { ListUsersQuery, AvailabilityQuery } from "./user.validator.js";
@@ -73,9 +75,26 @@ function toUserProfile(user: LeanUserDocument): UserProfile {
   };
 }
 
-export async function findById(id: string): Promise<UserProfile | null> {
+async function toCurrentUserProfile(
+  user: LeanUserDocument
+): Promise<CurrentUserProfile> {
+  const rootDir = await DirectoryRepository.findActiveById(
+    user._id,
+    user.storage.rootDirId
+  );
+  return {
+    ...toUserProfile(user),
+    storage: {
+      rootDirId: user.storage.rootDirId.toString(),
+      maxStorageInBytes: user.storage.maxStorageInBytes,
+      usedBytes: rootDir?.sizeInBytes ?? 0,
+    },
+  };
+}
+
+export async function findById(id: string): Promise<CurrentUserProfile | null> {
   const user = await UserRepository.findById(id);
-  return user ? toUserProfile(user) : null;
+  return user ? toCurrentUserProfile(user) : null;
 }
 
 export function findByIdWithPassword(id: string) {
@@ -160,13 +179,13 @@ export async function verifyCredentials(
 export async function updateProfile(
   userId: string,
   input: UpdateUserInput
-): Promise<UserProfile> {
+): Promise<CurrentUserProfile> {
   try {
     const user = await UserRepository.updateById(userId, input);
     if (!user) {
       throw AppError.notFound("User not found");
     }
-    return toUserProfile(user);
+    return toCurrentUserProfile(user);
   } catch (error) {
     if (MongoError.isDuplicateKey(error)) {
       throw AppError.conflict("Username already in use");

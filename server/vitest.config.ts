@@ -12,5 +12,6 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     fileParallelism: false,
     testTimeout: 15_000,
+    exclude: ["**/node_modules/**", "**/dist/**"],
   },
 });
