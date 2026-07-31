@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { connectTestDb, disconnectTestDb, clearTestDb } from "@/test/db.js";
 import {
   createTestUserWithRoot,
@@ -9,6 +17,13 @@ import File from "@/models/file.model.js";
 import * as DirectoryService from "@/modules/directory/directory.service.js";
 import * as FileService from "@/modules/file/file.service.js";
 import * as TrashService from "../trash.service.js";
+
+vi.mock("@/services/storage.service.js", () => ({
+  default: {
+    deleteObject: vi.fn().mockResolvedValue(undefined),
+    deleteObjects: vi.fn().mockResolvedValue(undefined),
+  },
+}));
 
 beforeAll(async () => {
   await connectTestDb();
@@ -156,5 +171,59 @@ describe("listTrash", () => {
     });
 
     expect(result.directories.map((d) => d.name)).toEqual(["newer", "older"]);
+  });
+});
+
+describe("emptyTrash", () => {
+  it("permanently deletes every trash root and leaves active items alone", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const active = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const trashedFolder = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const trashedFile = await createTestFile(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    await DirectoryService.trashDirectory(user._id, trashedFolder._id);
+    await FileService.trashFile(user._id, trashedFile._id);
+
+    await TrashService.emptyTrash(user._id);
+
+    expect(await Directory.findById(trashedFolder._id).lean()).toBeNull();
+    expect(await File.findById(trashedFile._id).lean()).toBeNull();
+    expect(await Directory.findById(active._id).lean()).not.toBeNull();
+  });
+
+  it("doesn't fail on a trash root nested inside another trash root", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const a = await createTestDirectory(user._id, {
+      name: "A",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const b = await createTestDirectory(user._id, {
+      name: "B",
+      parentDirId: a._id,
+      ancestorIds: [rootDirId, a._id],
+    });
+    const c = await createTestDirectory(user._id, {
+      name: "C",
+      parentDirId: b._id,
+      ancestorIds: [rootDirId, a._id, b._id],
+    });
+
+    await DirectoryService.trashDirectory(user._id, c._id);
+    await DirectoryService.trashDirectory(user._id, a._id);
+
+    await TrashService.emptyTrash(user._id);
+
+    expect(await Directory.findById(a._id).lean()).toBeNull();
+    expect(await Directory.findById(b._id).lean()).toBeNull();
+    expect(await Directory.findById(c._id).lean()).toBeNull();
   });
 });

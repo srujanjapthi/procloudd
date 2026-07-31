@@ -12,3 +12,7 @@ export async function getTrash(
   >("/trash", { params: { page, sortBy, sortOrder } });
   return { ...response.data.data, meta: response.data.meta! };
 }
+
+export async function emptyTrash(): Promise<void> {
+  await apiClient.delete<ApiSuccessResponse<null>>("/trash");
+}

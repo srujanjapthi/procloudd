@@ -118,6 +118,14 @@ export function countTrashRootDirectories(userId: Types.ObjectId) {
   });
 }
 
+export function findAllTrashRootDirectories(userId: Types.ObjectId) {
+  return Directory.find({
+    userId,
+    status: "trashed",
+    trashedAt: { $exists: true },
+  }).lean();
+}
+
 export async function rename(
   id: Types.ObjectId,
   name: string,

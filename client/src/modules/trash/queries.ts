@@ -102,6 +102,19 @@ export function useHardDeleteDirectoryMutation() {
   });
 }
 
+export function useEmptyTrashMutation() {
+  const queryClient = useQueryClient();
+  const invalidateTrash = useInvalidateTrash();
+
+  return useMutation({
+    mutationFn: TrashApi.emptyTrash,
+    onSuccess: () => {
+      invalidateTrash();
+      void queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY });
+    },
+  });
+}
+
 export function useHardDeleteFileMutation() {
   const queryClient = useQueryClient();
   const invalidateTrash = useInvalidateTrash();
