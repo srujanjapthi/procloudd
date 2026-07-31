@@ -129,6 +129,17 @@ export async function getDownloadUrl(
   );
 }
 
+export async function getPreviewUrl(
+  userId: Types.ObjectId,
+  fileId: Types.ObjectId
+): Promise<string> {
+  const file = await assertOwnedActiveFile(userId, fileId);
+  return Storage.getPreviewUrl(
+    file.storageKey,
+    composeFileName(file.baseName, file.extension)
+  );
+}
+
 export async function renameFile(
   userId: Types.ObjectId,
   fileId: Types.ObjectId,

@@ -19,6 +19,7 @@ export const {
   upload: uploadThrottle,
   fileOps: fileOperationsThrottle,
   download: downloadThrottle,
+  preview: previewThrottle,
   directoryOps: directoryOperationsThrottle,
   userMgmt: userManagementThrottle,
   availability: availabilityThrottle,

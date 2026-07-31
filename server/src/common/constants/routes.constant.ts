@@ -61,6 +61,7 @@ const ROUTES = {
     confirm: "",
     byId: "/:id",
     downloadUrl: "/:id/download-url",
+    previewUrl: "/:id/preview-url",
     move: "/:id/move",
     copy: "/:id/copy",
     restore: "/:id/restore",

@@ -42,6 +42,11 @@ export const throttlerPolicies = {
     waitTime: Duration.toMs("0.5s"),
     delayAfter: 10,
   },
+  preview: {
+    useUserId: true,
+    waitTime: Duration.toMs("0.3s"),
+    delayAfter: 30,
+  },
   directoryOps: {
     useUserId: true,
     waitTime: Duration.toMs("1.5s"),

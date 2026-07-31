@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 import { Folder } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { formatBytes } from "@/lib/format-bytes.util";
 import { DriveItemActionsMenu } from "./DriveItemActionsMenu";
 import { FileTypeIcon } from "./FileTypeIcon";
@@ -15,6 +14,7 @@ interface DriveTileProps {
   updatedAt: string;
   dirId: string;
   folderName: string;
+  onPreviewFile: (fileId: string) => void;
 }
 
 export function DriveTile({
@@ -26,6 +26,7 @@ export function DriveTile({
   updatedAt,
   dirId,
   folderName,
+  onPreviewFile,
 }: DriveTileProps) {
   const isDirectory = item.type === "directory";
   const icon = isDirectory ? (
@@ -34,12 +35,7 @@ export function DriveTile({
     <FileTypeIcon extension={extension ?? ""} className="size-12" />
   );
   const name = (
-    <p
-      className={cn(
-        "wrap-break-words line-clamp-2 w-full text-center text-sm font-medium",
-        isDirectory && "hover:underline"
-      )}
-    >
+    <p className="wrap-break-words line-clamp-2 w-full text-center text-sm font-medium hover:underline">
       {item.name}
     </p>
   );
@@ -56,6 +52,7 @@ export function DriveTile({
           updatedAt={updatedAt}
           dirId={dirId}
           locationName={folderName}
+          onPreviewFile={onPreviewFile}
         />
       </div>
 
@@ -68,10 +65,14 @@ export function DriveTile({
           {name}
         </Link>
       ) : (
-        <div className="flex flex-col items-center gap-2 px-2 pb-2">
+        <button
+          type="button"
+          onClick={() => onPreviewFile(item.id)}
+          className="flex flex-col items-center gap-2 px-2 pb-2"
+        >
           <div className="flex h-16 items-center justify-center">{icon}</div>
           {name}
-        </div>
+        </button>
       )}
       <p className="text-muted-foreground text-center text-xs">
         {formatBytes(sizeInBytes)}

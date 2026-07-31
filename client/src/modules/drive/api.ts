@@ -114,6 +114,13 @@ export async function getFileDownloadUrl(fileId: string): Promise<string> {
   return response.data.data.downloadUrl;
 }
 
+export async function getFilePreviewUrl(fileId: string): Promise<string> {
+  const response = await apiClient.get<
+    ApiSuccessResponse<{ previewUrl: string }>
+  >(`/files/${fileId}/preview-url`);
+  return response.data.data.previewUrl;
+}
+
 export async function renameFile(
   fileId: string,
   name: string

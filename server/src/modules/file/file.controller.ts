@@ -39,6 +39,16 @@ export async function getDownloadUrl(
   ApiResponse.success(res, { downloadUrl });
 }
 
+export async function getPreviewUrl(
+  req: TypedRequest<{ params: { id: string } }>,
+  res: Response
+): Promise<void> {
+  const userId = new mongoose.Types.ObjectId(req.user!.id);
+  const fileId = new mongoose.Types.ObjectId(req.params.id);
+  const previewUrl = await FileService.getPreviewUrl(userId, fileId);
+  ApiResponse.success(res, { previewUrl });
+}
+
 export async function renameFile(
   req: TypedRequest<{ params: { id: string }; body: RenameFileBody }>,
   res: Response

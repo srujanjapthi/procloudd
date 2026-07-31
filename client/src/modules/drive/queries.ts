@@ -1,6 +1,7 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
   keepPreviousData,
 } from "@tanstack/react-query";
@@ -204,5 +205,13 @@ export function useCopyFileMutation() {
     mutationFn: ({ fileId }: { fileId: string }) =>
       FilesApi.copyFile(fileId, {}),
     onSuccess: invalidate,
+  });
+}
+
+export function useFilePreviewUrlQuery(fileId: string | null) {
+  return useQuery({
+    queryKey: ["files", "previewUrl", fileId],
+    queryFn: () => FilesApi.getFilePreviewUrl(fileId!),
+    enabled: fileId !== null,
   });
 }

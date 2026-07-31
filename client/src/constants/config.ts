@@ -24,6 +24,9 @@ const APP_CONFIG = {
     retry: 1,
     staleTimeMs: 30_000,
   },
+  preview: {
+    maxTextPreviewBytes: 5 * 1024 * 1024,
+  },
 } as const;
 
 export default APP_CONFIG;

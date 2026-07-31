@@ -21,6 +21,7 @@ const client = new S3Client({
 
 const UPLOAD_URL_EXPIRY_SECONDS = Duration.toMs("5m") / 1000;
 const DOWNLOAD_URL_EXPIRY_SECONDS = Duration.toMs("5m") / 1000;
+const PREVIEW_URL_EXPIRY_SECONDS = Duration.toMs("1h") / 1000;
 
 function isNotFoundError(error: unknown): boolean {
   return error instanceof Error && error.name === "NotFound";
@@ -50,6 +51,17 @@ const Storage = {
     });
     return getSignedUrl(client, command, {
       expiresIn: DOWNLOAD_URL_EXPIRY_SECONDS,
+    });
+  },
+
+  getPreviewUrl(key: string, filename: string): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: env.AWS_S3_BUCKET,
+      Key: key,
+      ResponseContentDisposition: `inline; filename="${filename}"`,
+    });
+    return getSignedUrl(client, command, {
+      expiresIn: PREVIEW_URL_EXPIRY_SECONDS,
     });
   },
 

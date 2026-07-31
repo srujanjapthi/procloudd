@@ -7,6 +7,7 @@ interface DriveListProps {
   files: FileProfile[];
   dirId: string;
   folderName: string;
+  onPreviewFile: (fileId: string) => void;
 }
 
 export function DriveList({
@@ -14,6 +15,7 @@ export function DriveList({
   files,
   dirId,
   folderName,
+  onPreviewFile,
 }: DriveListProps) {
   return (
     <>
@@ -28,6 +30,7 @@ export function DriveList({
           updatedAt={dir.updatedAt}
           dirId={dirId}
           folderName={folderName}
+          onPreviewFile={onPreviewFile}
         />
       ))}
 
@@ -42,6 +45,7 @@ export function DriveList({
           updatedAt={file.updatedAt}
           dirId={dirId}
           folderName={folderName}
+          onPreviewFile={onPreviewFile}
         />
       ))}
     </>

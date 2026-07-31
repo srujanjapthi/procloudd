@@ -2,6 +2,7 @@ import { useParams } from "react-router";
 import { useAuth } from "@/modules/auth/context/AuthContext";
 import { useDirectoryContentsQuery } from "../queries";
 import { useDriveSort } from "./useDriveSort";
+import { useFilePreview } from "./useFilePreview";
 
 export function useDrivePage() {
   const { folderId } = useParams<{ folderId?: string }>();
@@ -22,6 +23,7 @@ export function useDrivePage() {
   const firstPage = data?.pages[0];
   const directories = data?.pages.flatMap((page) => page.directories) ?? [];
   const files = data?.pages.flatMap((page) => page.files) ?? [];
+  const filePreview = useFilePreview(files, isLoading, Boolean(hasNextPage));
 
   return {
     dirId,
@@ -42,5 +44,6 @@ export function useDrivePage() {
     setSortBy,
     sortOrder,
     toggleSortOrder,
+    ...filePreview,
   };
 }

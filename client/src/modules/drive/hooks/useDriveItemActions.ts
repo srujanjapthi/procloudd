@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { getApiErrorMessage } from "@/error/api.error";
+import { triggerDownload } from "@/lib/trigger-download.util";
 import * as DriveApi from "../api";
 import {
   useRenameDirectoryMutation,
@@ -17,15 +18,6 @@ export interface DriveItemRef {
   type: "directory" | "file";
   id: string;
   name: string;
-}
-
-function triggerDownload(url: string): void {
-  const link = document.createElement("a");
-  link.href = url;
-  link.rel = "noopener";
-  document.body.append(link);
-  link.click();
-  link.remove();
 }
 
 export function useDriveItemActions(item: DriveItemRef, dirId: string) {
