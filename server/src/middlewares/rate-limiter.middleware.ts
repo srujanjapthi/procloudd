@@ -21,6 +21,7 @@ export const {
   fileOps: fileOperationsLimiter,
   directoryOps: directoryOperationsLimiter,
   download: downloadLimiter,
+  preview: previewLimiter,
   userMgmt: userManagementLimiter,
   availability: availabilityLimiter,
   read: readOperationsLimiter,

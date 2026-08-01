@@ -25,6 +25,7 @@ vi.mock("@/services/storage.service.js", () => ({
     ),
     getUploadUrl: vi.fn().mockResolvedValue("https://s3.example/upload"),
     getDownloadUrl: vi.fn().mockResolvedValue("https://s3.example/download"),
+    getPreviewUrl: vi.fn().mockResolvedValue("https://s3.example/preview"),
     headObject: vi.fn(),
     copyObject: vi.fn().mockResolvedValue(undefined),
     deleteObject: vi.fn().mockResolvedValue(undefined),
@@ -70,6 +71,7 @@ afterEach(async () => {
   vi.mocked(Storage.deleteObject).mockClear();
   vi.mocked(Storage.getUploadUrl).mockClear();
   vi.mocked(Storage.getDownloadUrl).mockClear();
+  vi.mocked(Storage.getPreviewUrl).mockClear();
 });
 
 afterAll(async () => {
@@ -202,6 +204,34 @@ describe("getDownloadUrl", () => {
 
     await expect(
       FileService.getDownloadUrl(user._id, file._id)
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
+describe("getPreviewUrl", () => {
+  it("returns a signed preview URL", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const file = await createTestFile(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+
+    const url = await FileService.getPreviewUrl(user._id, file._id);
+
+    expect(url).toBe("https://s3.example/preview");
+    expect(Storage.getPreviewUrl).toHaveBeenCalledWith(
+      file.storageKey,
+      `${file.baseName}.${file.extension}`
+    );
+  });
+
+  it("throws 404 for a file the user does not own", async () => {
+    const { doc: user } = await createTestUserWithRoot();
+    const { doc: otherUser } = await createTestUserWithRoot();
+    const file = await createTestFile(otherUser._id);
+
+    await expect(
+      FileService.getPreviewUrl(user._id, file._id)
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

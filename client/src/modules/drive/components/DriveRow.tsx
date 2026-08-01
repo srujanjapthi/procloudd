@@ -15,6 +15,7 @@ interface DriveRowProps {
   updatedAt: string;
   dirId: string;
   folderName: string;
+  onPreviewFile: (fileId: string) => void;
 }
 
 export function DriveRow({
@@ -26,6 +27,7 @@ export function DriveRow({
   updatedAt,
   dirId,
   folderName,
+  onPreviewFile,
 }: DriveRowProps) {
   const isDirectory = item.type === "directory";
 
@@ -47,7 +49,13 @@ export function DriveRow({
               {item.name}
             </Link>
           ) : (
-            <span className="block truncate font-medium">{item.name}</span>
+            <button
+              type="button"
+              onClick={() => onPreviewFile(item.id)}
+              className="block max-w-full truncate text-left font-medium hover:underline"
+            >
+              {item.name}
+            </button>
           )}
           <p className="text-muted-foreground mt-0.5 truncate text-xs lg:hidden">
             {isDirectory ? "Folder" : `${(extension ?? "").toUpperCase()} file`}{" "}
@@ -77,6 +85,7 @@ export function DriveRow({
         updatedAt={updatedAt}
         dirId={dirId}
         locationName={folderName}
+        onPreviewFile={onPreviewFile}
       />
     </div>
   );

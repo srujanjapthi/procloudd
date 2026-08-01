@@ -6,6 +6,7 @@ interface DriveGridProps {
   files: FileProfile[];
   dirId: string;
   folderName: string;
+  onPreviewFile: (fileId: string) => void;
 }
 
 export const DRIVE_GRID_CLASSNAME =
@@ -16,6 +17,7 @@ export function DriveGrid({
   files,
   dirId,
   folderName,
+  onPreviewFile,
 }: DriveGridProps) {
   return (
     <div className={DRIVE_GRID_CLASSNAME}>
@@ -28,6 +30,7 @@ export function DriveGrid({
           updatedAt={dir.updatedAt}
           dirId={dirId}
           folderName={folderName}
+          onPreviewFile={onPreviewFile}
         />
       ))}
 
@@ -42,6 +45,7 @@ export function DriveGrid({
           updatedAt={file.updatedAt}
           dirId={dirId}
           folderName={folderName}
+          onPreviewFile={onPreviewFile}
         />
       ))}
     </div>

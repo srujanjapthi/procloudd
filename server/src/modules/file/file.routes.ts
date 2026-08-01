@@ -7,11 +7,13 @@ import {
   uploadLimiter,
   fileOperationsLimiter,
   downloadLimiter,
+  previewLimiter,
 } from "@/middlewares/rate-limiter.middleware.js";
 import {
   uploadThrottle,
   fileOperationsThrottle,
   downloadThrottle,
+  previewThrottle,
 } from "@/middlewares/throttler.middleware.js";
 import * as FileController from "./file.controller.js";
 import {
@@ -50,6 +52,14 @@ router.get(
   downloadLimiter,
   downloadThrottle,
   FileController.getDownloadUrl
+);
+
+router.get(
+  ROUTES.files.previewUrl,
+  authenticate,
+  previewLimiter,
+  previewThrottle,
+  FileController.getPreviewUrl
 );
 
 router.patch(

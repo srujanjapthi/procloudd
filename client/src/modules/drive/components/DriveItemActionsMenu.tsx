@@ -1,5 +1,6 @@
 import {
   MoreVertical,
+  Eye,
   Info,
   Pencil,
   Copy,
@@ -33,6 +34,7 @@ interface DriveItemActionsMenuProps {
   updatedAt: string;
   dirId: string;
   locationName: string;
+  onPreviewFile: (fileId: string) => void;
 }
 
 export function DriveItemActionsMenu({
@@ -44,6 +46,7 @@ export function DriveItemActionsMenu({
   updatedAt,
   dirId,
   locationName,
+  onPreviewFile,
 }: DriveItemActionsMenuProps) {
   const {
     isRenaming,
@@ -84,6 +87,12 @@ export function DriveItemActionsMenu({
           <MoreVertical />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {!isDirectory && (
+            <DropdownMenuItem onClick={() => onPreviewFile(item.id)}>
+              <Eye />
+              Preview
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setIsDetailsOpen(true)}>
             <Info />
             Details

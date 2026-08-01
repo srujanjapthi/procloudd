@@ -37,6 +37,7 @@ import { DriveGridSkeleton } from "../components/DriveGridSkeleton";
 import { UploadTray } from "../components/UploadTray";
 import { EmptyState } from "../components/EmptyState";
 import { CreateFolderDialog } from "../components/CreateFolderDialog";
+import { FilePreviewOverlay } from "../components/preview/FilePreviewOverlay";
 
 export default function DrivePage() {
   const {
@@ -56,6 +57,17 @@ export default function DrivePage() {
     setSortBy,
     sortOrder,
     toggleSortOrder,
+    currentFile,
+    previewUrl,
+    isLoadingUrl,
+    hasUrlError,
+    hasNext,
+    hasPrev,
+    openPreview,
+    close: closePreview,
+    next: nextPreview,
+    prev: prevPreview,
+    downloadCurrent,
   } = useDrivePage();
   const { uploads, uploadFiles, retryUpload, dismissUpload } =
     useFileUpload(dirId);
@@ -251,6 +263,7 @@ export default function DrivePage() {
             files={files}
             dirId={dirId}
             folderName={folderName}
+            onPreviewFile={openPreview}
           />
           {loadMoreSentinel}
         </div>
@@ -268,6 +281,7 @@ export default function DrivePage() {
             files={files}
             dirId={dirId}
             folderName={folderName}
+            onPreviewFile={openPreview}
           />
           {loadMoreSentinel}
         </div>
@@ -283,6 +297,19 @@ export default function DrivePage() {
         open={isCreateFolderOpen}
         onOpenChange={setIsCreateFolderOpen}
         parentDirId={dirId}
+      />
+
+      <FilePreviewOverlay
+        file={currentFile}
+        previewUrl={previewUrl}
+        isLoadingUrl={isLoadingUrl}
+        hasUrlError={hasUrlError}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
+        onClose={closePreview}
+        onNext={nextPreview}
+        onPrev={prevPreview}
+        onDownload={downloadCurrent}
       />
     </div>
   );

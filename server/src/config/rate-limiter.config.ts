@@ -70,6 +70,11 @@ export const rateLimiterPolicies = {
     max: 100,
     message: "Too many downloads, please slow down.",
   },
+  preview: {
+    windowMs: Duration.toMs("1m"),
+    max: 300,
+    message: "Too many preview requests, please slow down.",
+  },
   userMgmt: {
     windowMs: Duration.toMs("15m"),
     max: 50,
