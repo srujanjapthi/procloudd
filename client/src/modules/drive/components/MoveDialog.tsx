@@ -39,7 +39,7 @@ export function MoveDialog({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useDirectoryPickerQuery(pickerDirId);
+  } = useDirectoryPickerQuery(pickerDirId, open);
 
   const breadcrumb = data?.pages[0]?.breadcrumb ?? [];
   const directories = (

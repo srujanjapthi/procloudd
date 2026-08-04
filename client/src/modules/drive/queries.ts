@@ -36,7 +36,7 @@ export function useDirectoryContentsQuery(
   });
 }
 
-export function useDirectoryPickerQuery(dirId: string) {
+export function useDirectoryPickerQuery(dirId: string, enabled: boolean) {
   return useInfiniteQuery({
     queryKey: [...directoryContentsQueryKey(dirId), "picker"],
     queryFn: ({ pageParam }) =>
@@ -47,7 +47,7 @@ export function useDirectoryPickerQuery(dirId: string) {
       lastPage.meta.page < lastPage.meta.totalPages
         ? lastPage.meta.page + 1
         : undefined,
-    enabled: Boolean(dirId),
+    enabled: enabled && Boolean(dirId),
     placeholderData: keepPreviousData,
   });
 }
