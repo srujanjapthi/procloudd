@@ -1,11 +1,12 @@
 import type { Types } from "mongoose";
 import * as DirectoryRepository from "@/modules/directory/directory.repository.js";
 import * as FileRepository from "@/modules/file/file.repository.js";
-import {
-  toDirectoryProfile,
-  hardDeleteDirectory,
-} from "@/modules/directory/directory.service.js";
-import { toFileProfile, hardDeleteFile } from "@/modules/file/file.service.js";
+import * as UserRepository from "@/modules/user/user.repository.js";
+import { toDirectoryProfile } from "@/modules/directory/directory.service.js";
+import { toFileProfile } from "@/modules/file/file.service.js";
+import Storage from "@/services/storage.service.js";
+import AppError from "@/common/error/app.error.js";
+import * as Db from "@/common/lib/db.util.js";
 import * as Pagination from "@/common/pagination/pagination.util.js";
 import type { ListTrashQuery } from "./trash.validator.js";
 
@@ -72,26 +73,44 @@ export async function listTrash(userId: Types.ObjectId, query: ListTrashQuery) {
 }
 
 export async function emptyTrash(userId: Types.ObjectId): Promise<void> {
-  const [allDirs, allFiles] = await Promise.all([
+  const [allDirs, allFiles, trashedFiles] = await Promise.all([
     DirectoryRepository.findAllTrashRootDirectories(userId),
     FileRepository.findAllTrashRootFiles(userId),
+    FileRepository.findAllTrashedFiles(userId),
   ]);
+
+  if (allDirs.length === 0 && allFiles.length === 0) {
+    return;
+  }
+
+  const user = await UserRepository.findById(userId);
+  if (!user) {
+    throw AppError.notFound("User not found");
+  }
 
   const dirRootIds = new Set(allDirs.map((dir) => dir._id.toString()));
   const isNestedUnderAnotherRoot = (ancestorIds: Types.ObjectId[]): boolean =>
     ancestorIds.some((id) => dirRootIds.has(id.toString()));
 
-  const outermostDirs = allDirs.filter(
-    (dir) => !isNestedUnderAnotherRoot(dir.ancestorIds)
-  );
-  const topLevelFiles = allFiles.filter(
-    (file) => !isNestedUnderAnotherRoot(file.ancestorIds)
-  );
+  const freedBytes =
+    allDirs
+      .filter((dir) => !isNestedUnderAnotherRoot(dir.ancestorIds))
+      .reduce((total, dir) => total + dir.sizeInBytes, 0) +
+    allFiles
+      .filter((file) => !isNestedUnderAnotherRoot(file.ancestorIds))
+      .reduce((total, file) => total + file.sizeInBytes, 0);
 
-  for (const dir of outermostDirs) {
-    await hardDeleteDirectory(userId, dir._id);
-  }
-  for (const file of topLevelFiles) {
-    await hardDeleteFile(userId, file._id);
-  }
+  await Db.withTransaction(async (session) => {
+    await DirectoryRepository.deleteAllTrashed(userId, session);
+    await FileRepository.deleteAllTrashed(userId, session);
+    if (freedBytes > 0) {
+      await DirectoryRepository.adjustSizes(
+        [user.storage.rootDirId],
+        -freedBytes,
+        session
+      );
+    }
+  });
+
+  await Storage.deleteObjects(trashedFiles.map((file) => file.storageKey));
 }

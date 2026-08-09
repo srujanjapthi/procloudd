@@ -12,6 +12,7 @@ import { connectTestDb, disconnectTestDb, clearTestDb } from "@/test/db.js";
 import {
   createTestUserWithRoot,
   createTestDirectory,
+  createTestFile,
 } from "@/test/fixtures.js";
 import Directory from "@/models/directory.model.js";
 import File from "@/models/file.model.js";
@@ -34,31 +35,6 @@ vi.mock("@/services/storage.service.js", () => ({
 }));
 
 const { default: Storage } = await import("@/services/storage.service.js");
-
-async function createTestFile(
-  userId: mongoose.Types.ObjectId,
-  overrides: Partial<{
-    baseName: string;
-    sizeInBytes: number;
-    parentDirId: mongoose.Types.ObjectId;
-    ancestorIds: mongoose.Types.ObjectId[];
-    storageKey: string;
-    status: "active" | "trashed";
-  }> = {}
-) {
-  const doc = await File.create({
-    baseName: overrides.baseName ?? "file",
-    sizeInBytes: overrides.sizeInBytes ?? 10,
-    extension: "txt",
-    mimeType: "text/plain",
-    parentDirId: overrides.parentDirId ?? new mongoose.Types.ObjectId(),
-    ancestorIds: overrides.ancestorIds ?? [],
-    userId,
-    storageKey: overrides.storageKey ?? "users/x/original",
-    status: overrides.status ?? "active",
-  });
-  return doc.toObject();
-}
 
 beforeAll(async () => {
   await connectTestDb();
@@ -248,6 +224,239 @@ describe("renameFile", () => {
 
     expect(renamed.baseName).toBe("renamed");
     expect(renamed.name).toBe("renamed.txt");
+  });
+});
+
+describe("setFileStarred", () => {
+  it("stars and unstars a file", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const file = await createTestFile(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+
+    const starred = await FileService.setFileStarred(user._id, file._id, true);
+    expect(starred.starred).toBe(true);
+
+    const unstarred = await FileService.setFileStarred(
+      user._id,
+      file._id,
+      false
+    );
+    expect(unstarred.starred).toBe(false);
+  });
+
+  it("is idempotent when starring an already starred file", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const file = await createTestFile(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+      starred: true,
+    });
+
+    const result = await FileService.setFileStarred(user._id, file._id, true);
+
+    expect(result.starred).toBe(true);
+  });
+
+  it("throws 404 for a file the user does not own", async () => {
+    const { doc: user } = await createTestUserWithRoot();
+    const other = await createTestUserWithRoot();
+    const file = await createTestFile(other.doc._id, {
+      parentDirId: other.rootDirId,
+      ancestorIds: [other.rootDirId],
+    });
+
+    await expect(
+      FileService.setFileStarred(user._id, file._id, true)
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it("throws 404 for a trashed file", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const file = await createTestFile(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+      status: "trashed",
+    });
+
+    await expect(
+      FileService.setFileStarred(user._id, file._id, true)
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
+describe("listRecent", () => {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const defaultQuery = { page: 1, limit: 20, days: 30 };
+
+  async function setUpdatedDaysAgo(
+    fileId: mongoose.Types.ObjectId,
+    daysAgo: number
+  ) {
+    await File.updateOne(
+      { _id: fileId },
+      { $set: { updatedAt: new Date(Date.now() - daysAgo * DAY_MS) } },
+      { timestamps: false }
+    );
+  }
+
+  it("returns active files most recently updated first", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const oldest = await createTestFile(user._id, {
+      baseName: "oldest",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const newest = await createTestFile(user._id, {
+      baseName: "newest",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const middle = await createTestFile(user._id, {
+      baseName: "middle",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    await setUpdatedDaysAgo(oldest._id, 20);
+    await setUpdatedDaysAgo(middle._id, 10);
+    await setUpdatedDaysAgo(newest._id, 1);
+
+    const result = await FileService.listRecent(user._id, defaultQuery);
+
+    expect(result.files.map((file) => file.baseName)).toEqual([
+      "newest",
+      "middle",
+      "oldest",
+    ]);
+  });
+
+  it("excludes files updated outside the requested window", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const inside = await createTestFile(user._id, {
+      baseName: "inside",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const outside = await createTestFile(user._id, {
+      baseName: "outside",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    await setUpdatedDaysAgo(inside._id, 3);
+    await setUpdatedDaysAgo(outside._id, 45);
+
+    const result = await FileService.listRecent(user._id, defaultQuery);
+
+    expect(result.files.map((file) => file.baseName)).toEqual(["inside"]);
+    expect(result.meta.totalItems).toBe(1);
+  });
+
+  it("widens the window when more days are requested", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const older = await createTestFile(user._id, {
+      baseName: "older",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    await setUpdatedDaysAgo(older._id, 45);
+
+    const narrow = await FileService.listRecent(user._id, defaultQuery);
+    const wide = await FileService.listRecent(user._id, {
+      ...defaultQuery,
+      days: 90,
+    });
+
+    expect(narrow.files).toHaveLength(0);
+    expect(wide.files.map((file) => file.baseName)).toEqual(["older"]);
+  });
+
+  it("excludes trashed files and other users' files", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const other = await createTestUserWithRoot();
+    await createTestFile(user._id, {
+      baseName: "trashed",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+      status: "trashed",
+    });
+    await createTestFile(other.doc._id, {
+      baseName: "theirs",
+      parentDirId: other.rootDirId,
+      ancestorIds: [other.rootDirId],
+    });
+    await createTestFile(user._id, {
+      baseName: "mine",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+
+    const result = await FileService.listRecent(user._id, defaultQuery);
+
+    expect(result.files.map((file) => file.baseName)).toEqual(["mine"]);
+    expect(result.meta.totalItems).toBe(1);
+  });
+
+  it("labels root-level files as My Drive and nested files by folder name", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const folder = await createTestDirectory(user._id, {
+      name: "Reports",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const atRoot = await createTestFile(user._id, {
+      baseName: "at-root",
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+    const nested = await createTestFile(user._id, {
+      baseName: "nested",
+      parentDirId: folder._id,
+      ancestorIds: [rootDirId, folder._id],
+    });
+    await setUpdatedDaysAgo(nested._id, 10);
+    await setUpdatedDaysAgo(atRoot._id, 2);
+
+    const result = await FileService.listRecent(user._id, defaultQuery);
+
+    expect(result.files.map((file) => [file.baseName, file.location])).toEqual([
+      ["at-root", "My Drive"],
+      ["nested", "Reports"],
+    ]);
+  });
+
+  it("paginates", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    for (let i = 1; i <= 3; i++) {
+      const file = await createTestFile(user._id, {
+        baseName: `file-${i}`,
+        parentDirId: rootDirId,
+        ancestorIds: [rootDirId],
+      });
+      await setUpdatedDaysAgo(file._id, 10 - i);
+    }
+
+    const firstPage = await FileService.listRecent(user._id, {
+      ...defaultQuery,
+      limit: 2,
+    });
+    const secondPage = await FileService.listRecent(user._id, {
+      ...defaultQuery,
+      page: 2,
+      limit: 2,
+    });
+
+    expect(firstPage.files.map((file) => file.baseName)).toEqual([
+      "file-3",
+      "file-2",
+    ]);
+    expect(firstPage.meta).toEqual({
+      page: 1,
+      limit: 2,
+      totalItems: 3,
+      totalPages: 2,
+    });
+    expect(secondPage.files.map((file) => file.baseName)).toEqual(["file-1"]);
   });
 });
 

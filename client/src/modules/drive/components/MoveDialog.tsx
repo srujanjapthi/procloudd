@@ -35,7 +35,7 @@ export function MoveDialog({
   const {
     data,
     isLoading,
-    isFetching,
+    isPlaceholderData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -79,7 +79,7 @@ export function MoveDialog({
         <div
           className={cn(
             "h-64 overflow-y-auto rounded-lg border transition-opacity",
-            isFetching && !isLoading && "opacity-50"
+            isPlaceholderData && "opacity-50"
           )}
         >
           {isLoading ? (

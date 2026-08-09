@@ -285,6 +285,64 @@ describe("renameDirectory", () => {
   });
 });
 
+describe("setDirectoryStarred", () => {
+  it("stars and unstars a folder", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const dir = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+    });
+
+    const starred = await DirectoryService.setDirectoryStarred(
+      user._id,
+      dir._id,
+      true
+    );
+    expect(starred.starred).toBe(true);
+
+    const unstarred = await DirectoryService.setDirectoryStarred(
+      user._id,
+      dir._id,
+      false
+    );
+    expect(unstarred.starred).toBe(false);
+  });
+
+  it("rejects starring the root directory", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+
+    await expect(
+      DirectoryService.setDirectoryStarred(user._id, rootDirId, true)
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it("throws 404 for a folder the user does not own", async () => {
+    const { doc: user } = await createTestUserWithRoot();
+    const other = await createTestUserWithRoot();
+    const dir = await createTestDirectory(other.doc._id, {
+      parentDirId: other.rootDirId,
+      ancestorIds: [other.rootDirId],
+    });
+
+    await expect(
+      DirectoryService.setDirectoryStarred(user._id, dir._id, true)
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it("throws 404 for a trashed folder", async () => {
+    const { rootDirId, doc: user } = await createTestUserWithRoot();
+    const dir = await createTestDirectory(user._id, {
+      parentDirId: rootDirId,
+      ancestorIds: [rootDirId],
+      status: "trashed",
+    });
+
+    await expect(
+      DirectoryService.setDirectoryStarred(user._id, dir._id, true)
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
 describe("moveDirectory", () => {
   it("moves a folder and cascades ancestorIds to descendants", async () => {
     const { rootDirId, doc: user } = await createTestUserWithRoot();

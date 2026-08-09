@@ -67,6 +67,19 @@ export function countTrashRootFiles(userId: Types.ObjectId) {
   });
 }
 
+export function findAllTrashedFiles(userId: Types.ObjectId) {
+  return File.find({ userId, status: "trashed" })
+    .select("_id storageKey")
+    .lean();
+}
+
+export async function deleteAllTrashed(
+  userId: Types.ObjectId,
+  session: ClientSession
+): Promise<void> {
+  await File.deleteMany({ userId, status: "trashed" }, { session });
+}
+
 export function findAllTrashRootFiles(userId: Types.ObjectId) {
   return File.find({
     userId,
@@ -138,4 +151,50 @@ export async function hardDelete(
   session: ClientSession | null = null
 ): Promise<void> {
   await File.deleteOne({ _id: id }, Db.sessionOption(session));
+}
+
+export async function setStarred(id: Types.ObjectId, starred: boolean) {
+  return File.findOneAndUpdate(
+    { _id: id },
+    { $set: { starred } },
+    { returnDocument: "after", timestamps: false }
+  ).lean();
+}
+
+export function listRecentFiles(
+  userId: Types.ObjectId,
+  options: { since: Date; skip: number; limit: number }
+) {
+  return File.find({
+    userId,
+    status: "active",
+    updatedAt: { $gte: options.since },
+  })
+    .sort({ updatedAt: -1, _id: 1 })
+    .skip(options.skip)
+    .limit(options.limit)
+    .lean();
+}
+
+export function countRecentFiles(userId: Types.ObjectId, since: Date) {
+  return File.countDocuments({
+    userId,
+    status: "active",
+    updatedAt: { $gte: since },
+  });
+}
+
+export function listStarredFiles(
+  userId: Types.ObjectId,
+  options: { sort: Record<string, SortOrder>; skip: number; limit: number }
+) {
+  return File.find({ userId, status: "active", starred: true })
+    .sort(options.sort)
+    .skip(options.skip)
+    .limit(options.limit)
+    .lean();
+}
+
+export function countStarredFiles(userId: Types.ObjectId) {
+  return File.countDocuments({ userId, status: "active", starred: true });
 }

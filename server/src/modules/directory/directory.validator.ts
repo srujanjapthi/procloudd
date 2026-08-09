@@ -36,6 +36,11 @@ export const duplicateDirectorySchema = z.object({
 });
 export type DuplicateDirectoryBody = z.infer<typeof duplicateDirectorySchema>;
 
+export const setDirectoryStarredSchema = z.object({
+  starred: z.boolean(),
+});
+export type SetDirectoryStarredBody = z.infer<typeof setDirectoryStarredSchema>;
+
 export const listDirectoryContentsQuerySchema = paginationQuerySchema.extend({
   sortBy: z.enum(["name", "createdAt", "sizeInBytes"]).default("name"),
 });

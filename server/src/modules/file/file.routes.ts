@@ -3,6 +3,7 @@ import ROUTES from "@/common/constants/routes.constant.js";
 import { authenticate } from "@/middlewares/authenticate.middleware.js";
 import { validateId } from "@/middlewares/validate-id.middleware.js";
 import { validateBody } from "@/middlewares/validate-body.middleware.js";
+import { validateQuery } from "@/middlewares/validate-query.middleware.js";
 import {
   uploadLimiter,
   fileOperationsLimiter,
@@ -20,6 +21,8 @@ import {
   requestUploadUrlSchema,
   confirmUploadSchema,
   renameFileSchema,
+  setFileStarredSchema,
+  listRecentQuerySchema,
   moveFileSchema,
   copyFileSchema,
 } from "./file.validator.js";
@@ -69,6 +72,24 @@ router.patch(
   fileOperationsThrottle,
   validateBody(renameFileSchema),
   FileController.renameFile
+);
+
+router.patch(
+  ROUTES.files.star,
+  authenticate,
+  fileOperationsLimiter,
+  fileOperationsThrottle,
+  validateBody(setFileStarredSchema),
+  FileController.setFileStarred
+);
+
+router.get(
+  ROUTES.files.recent,
+  authenticate,
+  fileOperationsLimiter,
+  fileOperationsThrottle,
+  validateQuery(listRecentQuerySchema),
+  FileController.listRecent
 );
 
 router.patch(

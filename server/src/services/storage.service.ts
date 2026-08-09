@@ -8,7 +8,7 @@ import {
   DeleteObjectsCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import * as Duration from "@/common/lib/duration.util.js";
+import AppConfig from "@/config/app.config.js";
 import env from "@/config/env.config.js";
 
 const client = new S3Client({
@@ -19,9 +19,11 @@ const client = new S3Client({
   },
 });
 
-const UPLOAD_URL_EXPIRY_SECONDS = Duration.toMs("5m") / 1000;
-const DOWNLOAD_URL_EXPIRY_SECONDS = Duration.toMs("5m") / 1000;
-const PREVIEW_URL_EXPIRY_SECONDS = Duration.toMs("1h") / 1000;
+const UPLOAD_URL_EXPIRY_SECONDS = AppConfig.storage.uploadUrlExpiryMs / 1000;
+const DOWNLOAD_URL_EXPIRY_SECONDS =
+  AppConfig.storage.downloadUrlExpiryMs / 1000;
+const PREVIEW_URL_EXPIRY_SECONDS = AppConfig.storage.previewUrlExpiryMs / 1000;
+const DELETE_OBJECTS_BATCH_SIZE = AppConfig.storage.deleteObjectsBatchSize;
 
 function isNotFoundError(error: unknown): boolean {
   return error instanceof Error && error.name === "NotFound";
@@ -96,15 +98,15 @@ const Storage = {
   },
 
   async deleteObjects(keys: string[]): Promise<void> {
-    if (keys.length === 0) {
-      return;
+    for (let i = 0; i < keys.length; i += DELETE_OBJECTS_BATCH_SIZE) {
+      const batch = keys.slice(i, i + DELETE_OBJECTS_BATCH_SIZE);
+      await client.send(
+        new DeleteObjectsCommand({
+          Bucket: env.AWS_S3_BUCKET,
+          Delete: { Objects: batch.map((Key) => ({ Key })) },
+        })
+      );
     }
-    await client.send(
-      new DeleteObjectsCommand({
-        Bucket: env.AWS_S3_BUCKET,
-        Delete: { Objects: keys.map((Key) => ({ Key })) },
-      })
-    );
   },
 };
 

@@ -27,6 +27,15 @@ const APP_CONFIG = {
   preview: {
     maxTextPreviewBytes: 5 * 1024 * 1024,
   },
+  recent: {
+    defaultWindowDays: 30,
+    windowOptions: [
+      { days: 7, label: "Last 7 days" },
+      { days: 30, label: "Last 30 days" },
+      { days: 90, label: "Last 90 days" },
+      { days: 365, label: "Last year" },
+    ],
+  },
 } as const;
 
 export default APP_CONFIG;

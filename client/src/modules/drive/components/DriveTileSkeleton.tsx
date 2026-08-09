@@ -3,7 +3,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function DriveTileSkeleton() {
   return (
     <div className="flex flex-col rounded-lg p-2">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <Skeleton className="size-7 rounded-md" />
         <Skeleton className="size-7 rounded-md" />
       </div>
       <div className="flex flex-col items-center gap-2 px-2 pb-2">

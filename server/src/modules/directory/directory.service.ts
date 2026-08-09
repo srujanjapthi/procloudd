@@ -120,6 +120,33 @@ async function buildBreadcrumb(
   }));
 }
 
+export async function resolveLocationNames(
+  userId: Types.ObjectId,
+  parentDirIds: Types.ObjectId[],
+  rootDirId: Types.ObjectId
+): Promise<Map<string, string>> {
+  const rootId = rootDirId.toString();
+  const ids = [...new Set(parentDirIds.map((id) => id.toString()))].filter(
+    (id) => id !== rootId
+  );
+  const entries = await DirectoryRepository.findNamesByIds(
+    userId,
+    ids.map((id) => new mongoose.Types.ObjectId(id))
+  );
+  const namesById = new Map(
+    entries.map((entry) => [entry._id.toString(), entry.name])
+  );
+  return new Map(
+    parentDirIds.map((id) => {
+      const idStr = id.toString();
+      return [
+        idStr,
+        idStr === rootId ? "My Drive" : (namesById.get(idStr) ?? ""),
+      ];
+    })
+  );
+}
+
 export async function listContents(
   userId: Types.ObjectId,
   dirId: Types.ObjectId,
@@ -187,6 +214,18 @@ export async function renameDirectory(
   assertNotRoot(dir);
 
   const updated = await DirectoryRepository.rename(dirId, name);
+  return toDirectoryProfile(updated!);
+}
+
+export async function setDirectoryStarred(
+  userId: Types.ObjectId,
+  dirId: Types.ObjectId,
+  starred: boolean
+): Promise<DirectoryProfile> {
+  const dir = await assertOwnedActiveDirectory(userId, dirId);
+  assertNotRoot(dir);
+
+  const updated = await DirectoryRepository.setStarred(dirId, starred);
   return toDirectoryProfile(updated!);
 }
 

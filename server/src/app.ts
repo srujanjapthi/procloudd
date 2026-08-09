@@ -12,6 +12,7 @@ import twoFactorRoutes from "@/modules/twofactor/twofactor.routes.js";
 import directoryRoutes from "@/modules/directory/directory.routes.js";
 import fileRoutes from "@/modules/file/file.routes.js";
 import trashRoutes from "@/modules/trash/trash.routes.js";
+import starredRoutes from "@/modules/starred/starred.routes.js";
 import statsRoutes from "@/modules/stats/stats.routes.js";
 import env from "@/config/env.config.js";
 
@@ -38,6 +39,7 @@ app.use(twoFactorRoutes);
 app.use(directoryRoutes);
 app.use(fileRoutes);
 app.use(trashRoutes);
+app.use(starredRoutes);
 app.use(statsRoutes);
 
 app.use(errorMiddleware);

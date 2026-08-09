@@ -3,6 +3,8 @@ import { Folder } from "lucide-react";
 import { formatBytes } from "@/lib/format-bytes.util";
 import { DriveItemActionsMenu } from "./DriveItemActionsMenu";
 import { FileTypeIcon } from "./FileTypeIcon";
+import { StarToggleButton } from "./StarToggleButton";
+import { useStarToggle } from "../hooks/useStarToggle";
 import type { DriveItemRef } from "../hooks/useDriveItemActions";
 
 interface DriveTileProps {
@@ -12,6 +14,7 @@ interface DriveTileProps {
   sizeInBytes: number;
   createdAt: string;
   updatedAt: string;
+  starred: boolean;
   dirId: string;
   folderName: string;
   onPreviewFile: (fileId: string) => void;
@@ -24,11 +27,13 @@ export function DriveTile({
   sizeInBytes,
   createdAt,
   updatedAt,
+  starred,
   dirId,
   folderName,
   onPreviewFile,
 }: DriveTileProps) {
   const isDirectory = item.type === "directory";
+  const { toggleStar, isStarPending } = useStarToggle(item);
   const icon = isDirectory ? (
     <Folder className="text-muted-foreground size-12" />
   ) : (
@@ -42,7 +47,12 @@ export function DriveTile({
 
   return (
     <div className="hover:bg-muted/50 flex flex-col rounded-lg p-2">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <StarToggleButton
+          starred={starred}
+          disabled={isStarPending}
+          onToggle={(next) => void toggleStar(next)}
+        />
         <DriveItemActionsMenu
           item={item}
           baseName={baseName}

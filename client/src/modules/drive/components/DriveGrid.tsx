@@ -28,6 +28,7 @@ export function DriveGrid({
           sizeInBytes={dir.sizeInBytes}
           createdAt={dir.createdAt}
           updatedAt={dir.updatedAt}
+          starred={dir.starred}
           dirId={dirId}
           folderName={folderName}
           onPreviewFile={onPreviewFile}
@@ -43,6 +44,7 @@ export function DriveGrid({
           sizeInBytes={file.sizeInBytes}
           createdAt={file.createdAt}
           updatedAt={file.updatedAt}
+          starred={file.starred}
           dirId={dirId}
           folderName={folderName}
           onPreviewFile={onPreviewFile}

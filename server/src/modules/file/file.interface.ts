@@ -28,3 +28,5 @@ export interface FileProfile {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type FileProfileWithLocation = FileProfile & { location: string };

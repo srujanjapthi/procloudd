@@ -11,6 +11,7 @@ import { connectTestDb, disconnectTestDb, clearTestDb } from "@/test/db.js";
 import {
   createTestUserWithRoot,
   createTestDirectory,
+  createTestFile,
 } from "@/test/fixtures.js";
 import Directory from "@/models/directory.model.js";
 import File from "@/models/file.model.js";
@@ -36,27 +37,6 @@ afterEach(async () => {
 afterAll(async () => {
   await disconnectTestDb();
 });
-
-async function createTestFile(
-  userId: Parameters<typeof createTestDirectory>[0],
-  overrides: {
-    baseName?: string;
-    parentDirId: Parameters<typeof createTestDirectory>[0];
-    ancestorIds: Parameters<typeof createTestDirectory>[0][];
-  }
-) {
-  const doc = await File.create({
-    baseName: overrides.baseName ?? "file",
-    sizeInBytes: 10,
-    extension: "txt",
-    mimeType: "text/plain",
-    parentDirId: overrides.parentDirId,
-    ancestorIds: overrides.ancestorIds,
-    userId,
-    storageKey: "users/x/y",
-  });
-  return doc.toObject();
-}
 
 describe("listTrash", () => {
   it("returns only trash roots, excluding swept descendants and active items", async () => {
