@@ -1,10 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
-import { useQueryClient } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@/error/api.error";
-import { CURRENT_USER_QUERY_KEY } from "@/modules/auth/queries";
 import * as DriveApi from "../api";
-import { FILES_QUERY_KEY } from "../queries";
+import { useInvalidateFiles, useInvalidateStorageUsage } from "../queries";
 
 export interface UploadItem {
   id: string;
@@ -20,7 +18,8 @@ interface PendingUpload extends UploadItem {
 
 export function useFileUpload(dirId: string) {
   const [uploads, setUploads] = useState<PendingUpload[]>([]);
-  const queryClient = useQueryClient();
+  const invalidateFiles = useInvalidateFiles();
+  const invalidateStorageUsage = useInvalidateStorageUsage();
 
   function updateUpload(id: string, patch: Partial<PendingUpload>) {
     setUploads((prev) =>
@@ -60,10 +59,6 @@ export function useFileUpload(dirId: string) {
       });
 
       updateUpload(upload.id, { status: "done", progress: 100 });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: FILES_QUERY_KEY }),
-        queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY }),
-      ]);
 
       setTimeout(() => {
         setUploads((prev) => prev.filter((item) => item.id !== upload.id));
@@ -76,6 +71,12 @@ export function useFileUpload(dirId: string) {
     }
   }
 
+  async function runBatch(batch: PendingUpload[]) {
+    await Promise.all(batch.map(runUpload));
+    invalidateFiles();
+    invalidateStorageUsage();
+  }
+
   function uploadFiles(files: FileList | File[]) {
     const newUploads: PendingUpload[] = Array.from(files).map((file) => ({
       id: crypto.randomUUID(),
@@ -86,7 +87,7 @@ export function useFileUpload(dirId: string) {
     }));
 
     setUploads((prev) => [...prev, ...newUploads]);
-    newUploads.forEach((upload) => void runUpload(upload));
+    void runBatch(newUploads);
   }
 
   function retryUpload(id: string) {
@@ -95,7 +96,7 @@ export function useFileUpload(dirId: string) {
       return;
     }
     updateUpload(id, { status: "uploading", progress: 0, error: undefined });
-    void runUpload(upload);
+    void runBatch([upload]);
   }
 
   function dismissUpload(id: string) {

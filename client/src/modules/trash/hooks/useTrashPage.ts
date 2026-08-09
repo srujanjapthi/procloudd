@@ -11,7 +11,7 @@ export function useTrashPage() {
   const {
     data,
     isLoading,
-    isFetching,
+    isPlaceholderData,
     isError,
     fetchNextPage,
     hasNextPage,
@@ -38,7 +38,7 @@ export function useTrashPage() {
     directories,
     files,
     isLoading,
-    isFetching,
+    isPlaceholderData,
     isError,
     isEmpty:
       !isLoading && !isError && directories.length === 0 && files.length === 0,

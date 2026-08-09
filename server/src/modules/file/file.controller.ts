@@ -7,6 +7,8 @@ import type {
   RequestUploadUrlBody,
   ConfirmUploadBody,
   RenameFileBody,
+  SetFileStarredBody,
+  ListRecentQuery,
   MoveFileBody,
   CopyFileBody,
 } from "./file.validator.js";
@@ -57,6 +59,30 @@ export async function renameFile(
   const fileId = new mongoose.Types.ObjectId(req.params.id);
   const file = await FileService.renameFile(userId, fileId, req.body.name);
   ApiResponse.success(res, file, { message: "File renamed successfully" });
+}
+
+export async function setFileStarred(
+  req: TypedRequest<{ params: { id: string }; body: SetFileStarredBody }>,
+  res: Response
+): Promise<void> {
+  const userId = new mongoose.Types.ObjectId(req.user!.id);
+  const fileId = new mongoose.Types.ObjectId(req.params.id);
+  const file = await FileService.setFileStarred(
+    userId,
+    fileId,
+    req.body.starred
+  );
+  ApiResponse.success(res, file);
+}
+
+export async function listRecent(
+  req: TypedRequest,
+  res: Response
+): Promise<void> {
+  const userId = new mongoose.Types.ObjectId(req.user!.id);
+  const query = req.query as unknown as ListRecentQuery;
+  const { meta, ...contents } = await FileService.listRecent(userId, query);
+  ApiResponse.success(res, contents, { meta });
 }
 
 export async function moveFile(

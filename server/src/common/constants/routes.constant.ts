@@ -51,6 +51,7 @@ const ROUTES = {
     create: "",
     byId: "/:id",
     contents: "/:id/contents",
+    star: "/:id/star",
     move: "/:id/move",
     duplicate: "/:id/duplicate",
     restore: "/:id/restore",
@@ -62,12 +63,17 @@ const ROUTES = {
     byId: "/:id",
     downloadUrl: "/:id/download-url",
     previewUrl: "/:id/preview-url",
+    star: "/:id/star",
     move: "/:id/move",
     copy: "/:id/copy",
     restore: "/:id/restore",
     permanent: "/:id/permanent",
+    recent: "/recent",
   }),
   trash: api.group("/trash", {
+    list: "",
+  }),
+  starred: api.group("/starred", {
     list: "",
   }),
   stats: api.group("/stats", {

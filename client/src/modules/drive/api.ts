@@ -69,6 +69,17 @@ export async function duplicateDirectory(
   return response.data.data;
 }
 
+export async function setDirectoryStarred(
+  dirId: string,
+  starred: boolean
+): Promise<DirectoryProfile> {
+  const response = await apiClient.patch<ApiSuccessResponse<DirectoryProfile>>(
+    `/directories/${dirId}/star`,
+    { starred }
+  );
+  return response.data.data;
+}
+
 export async function trashDirectory(dirId: string): Promise<void> {
   await apiClient.delete<ApiSuccessResponse<null>>(`/directories/${dirId}`);
 }
@@ -150,6 +161,17 @@ export async function copyFile(
   const response = await apiClient.post<ApiSuccessResponse<FileProfile>>(
     `/files/${fileId}/copy`,
     input
+  );
+  return response.data.data;
+}
+
+export async function setFileStarred(
+  fileId: string,
+  starred: boolean
+): Promise<FileProfile> {
+  const response = await apiClient.patch<ApiSuccessResponse<FileProfile>>(
+    `/files/${fileId}/star`,
+    { starred }
   );
   return response.data.data;
 }

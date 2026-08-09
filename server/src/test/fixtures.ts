@@ -3,6 +3,8 @@ import User from "@/models/user.model.js";
 import type { User as UserDoc } from "@/models/user.model.js";
 import Directory from "@/models/directory.model.js";
 import type { Directory as DirectoryDoc } from "@/models/directory.model.js";
+import File from "@/models/file.model.js";
+import type { File as FileDoc } from "@/models/file.model.js";
 import Otp from "@/models/otp.model.js";
 import type { OtpPurpose } from "@/models/otp.model.js";
 import * as CredentialHasher from "@/common/lib/credential-hasher.util.js";
@@ -68,6 +70,37 @@ export async function createTestDirectory(
     parentDirId: options.parentDirId ?? null,
     ancestorIds: options.ancestorIds ?? [],
     sizeInBytes: options.sizeInBytes ?? 0,
+    status: options.status ?? "active",
+    starred: options.starred ?? false,
+  });
+  return doc.toObject();
+}
+
+export interface CreateTestFileOptions {
+  baseName?: string;
+  extension?: string;
+  mimeType?: string;
+  sizeInBytes?: number;
+  parentDirId?: mongoose.Types.ObjectId;
+  ancestorIds?: mongoose.Types.ObjectId[];
+  storageKey?: string;
+  status?: "active" | "trashed";
+  starred?: boolean;
+}
+
+export async function createTestFile(
+  userId: mongoose.Types.ObjectId,
+  options: CreateTestFileOptions = {}
+): Promise<FileDoc & { _id: mongoose.Types.ObjectId }> {
+  const doc = await File.create({
+    baseName: options.baseName ?? "file",
+    sizeInBytes: options.sizeInBytes ?? 10,
+    extension: options.extension ?? "txt",
+    mimeType: options.mimeType ?? "text/plain",
+    parentDirId: options.parentDirId ?? new mongoose.Types.ObjectId(),
+    ancestorIds: options.ancestorIds ?? [],
+    userId,
+    storageKey: options.storageKey ?? "users/x/original",
     status: options.status ?? "active",
     starred: options.starred ?? false,
   });

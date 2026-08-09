@@ -10,6 +10,7 @@ import * as DirectoryController from "./directory.controller.js";
 import {
   createDirectorySchema,
   renameDirectorySchema,
+  setDirectoryStarredSchema,
   moveDirectorySchema,
   duplicateDirectorySchema,
   listDirectoryContentsQuerySchema,
@@ -44,6 +45,15 @@ router.patch(
   directoryOperationsThrottle,
   validateBody(renameDirectorySchema),
   DirectoryController.renameDirectory
+);
+
+router.patch(
+  ROUTES.directories.star,
+  authenticate,
+  directoryOperationsLimiter,
+  directoryOperationsThrottle,
+  validateBody(setDirectoryStarredSchema),
+  DirectoryController.setDirectoryStarred
 );
 
 router.patch(

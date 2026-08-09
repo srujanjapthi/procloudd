@@ -8,7 +8,7 @@ export function TrashListSkeleton() {
     <>
       <TrashColumnHeader />
       {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
-        <DriveRowSkeleton key={index} />
+        <DriveRowSkeleton key={index} showStar={false} />
       ))}
     </>
   );

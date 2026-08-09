@@ -6,6 +6,7 @@ import * as DirectoryService from "./directory.service.js";
 import type {
   CreateDirectoryBody,
   RenameDirectoryBody,
+  SetDirectoryStarredBody,
   MoveDirectoryBody,
   DuplicateDirectoryBody,
   ListDirectoryContentsQuery,
@@ -47,6 +48,20 @@ export async function renameDirectory(
     req.body.name
   );
   ApiResponse.success(res, dir, { message: "Folder renamed successfully" });
+}
+
+export async function setDirectoryStarred(
+  req: TypedRequest<{ params: { id: string }; body: SetDirectoryStarredBody }>,
+  res: Response
+): Promise<void> {
+  const userId = new mongoose.Types.ObjectId(req.user!.id);
+  const dirId = new mongoose.Types.ObjectId(req.params.id);
+  const dir = await DirectoryService.setDirectoryStarred(
+    userId,
+    dirId,
+    req.body.starred
+  );
+  ApiResponse.success(res, dir);
 }
 
 export async function moveDirectory(

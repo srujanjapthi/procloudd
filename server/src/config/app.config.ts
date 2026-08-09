@@ -51,9 +51,17 @@ const AppConfig = {
   },
   storage: {
     defaultMaxStorageInBytes: 1 * 1024 ** 3,
+    uploadUrlExpiryMs: Duration.toMs("5m"),
+    downloadUrlExpiryMs: Duration.toMs("5m"),
+    previewUrlExpiryMs: Duration.toMs("1h"),
+    deleteObjectsBatchSize: 1000,
   },
   stats: {
     largestFilesLimit: 10,
+  },
+  recent: {
+    defaultWindowDays: 30,
+    maxWindowDays: 365,
   },
 } as const;
 

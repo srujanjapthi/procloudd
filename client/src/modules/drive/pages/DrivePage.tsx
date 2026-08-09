@@ -46,7 +46,7 @@ export default function DrivePage() {
     directories,
     files,
     isLoading,
-    isFetching,
+    isPlaceholderData,
     isError,
     isEmpty,
     totalItems,
@@ -83,7 +83,7 @@ export default function DrivePage() {
 
   const folderName =
     breadcrumb.length > 1 ? breadcrumb[breadcrumb.length - 1].name : "My Drive";
-  const isNavigatingFolder = isFetching && !isLoading;
+  const isNavigatingFolder = isPlaceholderData;
 
   const sentinelRef = useLoadMoreOnScroll(
     loadMore,

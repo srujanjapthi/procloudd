@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { LayoutDashboard, HardDrive, Trash2 } from "lucide-react";
+import { LayoutDashboard, HardDrive, Clock, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -25,6 +25,8 @@ import ROUTES from "@/constants/routes";
 const NAV_ITEMS = [
   { title: "Dashboard", url: ROUTES.dashboard, icon: LayoutDashboard },
   { title: "My Drive", url: ROUTES.drive, icon: HardDrive },
+  { title: "Recent", url: ROUTES.recent, icon: Clock },
+  { title: "Starred", url: ROUTES.starred, icon: Star },
 ];
 
 const TRASH_NAV_ITEM = { title: "Trash", url: ROUTES.trash, icon: Trash2 };

@@ -4,6 +4,8 @@ import { formatBytes } from "@/lib/format-bytes.util";
 import { formatRelativeTime } from "@/lib/date.util";
 import { DriveItemActionsMenu } from "./DriveItemActionsMenu";
 import { FileTypeIcon } from "./FileTypeIcon";
+import { StarToggleButton } from "./StarToggleButton";
+import { useStarToggle } from "../hooks/useStarToggle";
 import type { DriveItemRef } from "../hooks/useDriveItemActions";
 
 interface DriveRowProps {
@@ -13,8 +15,10 @@ interface DriveRowProps {
   sizeInBytes: number;
   createdAt: string;
   updatedAt: string;
+  starred: boolean;
   dirId: string;
   folderName: string;
+  location?: string;
   onPreviewFile: (fileId: string) => void;
 }
 
@@ -25,11 +29,17 @@ export function DriveRow({
   sizeInBytes,
   createdAt,
   updatedAt,
+  starred,
   dirId,
   folderName,
+  location,
   onPreviewFile,
 }: DriveRowProps) {
   const isDirectory = item.type === "directory";
+  const typeLabel = isDirectory
+    ? "Folder"
+    : `${(extension ?? "").toUpperCase()} file`;
+  const { toggleStar, isStarPending } = useStarToggle(item);
 
   return (
     <div className="hover:bg-muted/50 flex items-center gap-6 rounded-lg px-3 py-2 text-sm">
@@ -58,15 +68,14 @@ export function DriveRow({
             </button>
           )}
           <p className="text-muted-foreground mt-0.5 truncate text-xs lg:hidden">
-            {isDirectory ? "Folder" : `${(extension ?? "").toUpperCase()} file`}{" "}
-            · {formatBytes(sizeInBytes)} ·{" "}
+            {location ?? typeLabel} · {formatBytes(sizeInBytes)} ·{" "}
             {formatRelativeTime(new Date(updatedAt).getTime())}
           </p>
         </div>
       </div>
 
       <span className="text-muted-foreground hidden w-28 shrink-0 truncate lg:block">
-        {isDirectory ? "Folder" : `${(extension ?? "").toUpperCase()} file`}
+        {location ?? typeLabel}
       </span>
 
       <span className="text-muted-foreground hidden w-20 shrink-0 text-right tabular-nums lg:block">
@@ -76,17 +85,24 @@ export function DriveRow({
         {formatRelativeTime(new Date(updatedAt).getTime())}
       </span>
 
-      <DriveItemActionsMenu
-        item={item}
-        baseName={baseName}
-        extension={extension}
-        sizeInBytes={sizeInBytes}
-        createdAt={createdAt}
-        updatedAt={updatedAt}
-        dirId={dirId}
-        locationName={folderName}
-        onPreviewFile={onPreviewFile}
-      />
+      <div className="flex shrink-0 items-center gap-0.5">
+        <StarToggleButton
+          starred={starred}
+          disabled={isStarPending}
+          onToggle={(next) => void toggleStar(next)}
+        />
+        <DriveItemActionsMenu
+          item={item}
+          baseName={baseName}
+          extension={extension}
+          sizeInBytes={sizeInBytes}
+          createdAt={createdAt}
+          updatedAt={updatedAt}
+          dirId={dirId}
+          locationName={folderName}
+          onPreviewFile={onPreviewFile}
+        />
+      </div>
     </div>
   );
 }

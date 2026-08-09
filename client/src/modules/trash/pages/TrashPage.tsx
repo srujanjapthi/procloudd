@@ -33,7 +33,7 @@ export default function TrashPage() {
     directories,
     files,
     isLoading,
-    isFetching,
+    isPlaceholderData,
     isError,
     isEmpty,
     totalItems,
@@ -50,7 +50,7 @@ export default function TrashPage() {
     setIsEmptyTrashConfirmOpen,
   } = useTrashPage();
 
-  const isRefetching = isFetching && !isLoading;
+  const isRefetching = isPlaceholderData;
 
   const sentinelRef = useLoadMoreOnScroll(
     loadMore,

@@ -8,16 +8,24 @@ import {
   assertOwnedActiveDirectory,
   assertQuotaAvailable,
   excludingRoot,
+  resolveLocationNames,
 } from "@/modules/directory/directory.service.js";
 import Storage from "@/services/storage.service.js";
 import AppError from "@/common/error/app.error.js";
 import * as Db from "@/common/lib/db.util.js";
+import * as Duration from "@/common/lib/duration.util.js";
+import * as Pagination from "@/common/pagination/pagination.util.js";
 import type {
   RequestUploadUrlBody,
   ConfirmUploadBody,
   CopyFileBody,
+  ListRecentQuery,
 } from "./file.validator.js";
-import type { FileProfile, LeanFileDocument } from "./file.interface.js";
+import type {
+  FileProfile,
+  FileProfileWithLocation,
+  LeanFileDocument,
+} from "./file.interface.js";
 
 function composeFileName(baseName: string, extension: string): string {
   return extension ? `${baseName}.${extension}` : baseName;
@@ -148,6 +156,49 @@ export async function renameFile(
   await assertOwnedActiveFile(userId, fileId);
   const updated = await FileRepository.rename(fileId, name);
   return toFileProfile(updated!);
+}
+
+export async function setFileStarred(
+  userId: Types.ObjectId,
+  fileId: Types.ObjectId,
+  starred: boolean
+): Promise<FileProfile> {
+  await assertOwnedActiveFile(userId, fileId);
+  const updated = await FileRepository.setStarred(fileId, starred);
+  return toFileProfile(updated!);
+}
+
+export async function listRecent(
+  userId: Types.ObjectId,
+  query: ListRecentQuery
+) {
+  const user = await UserRepository.findById(userId);
+  if (!user) {
+    throw AppError.notFound("User not found");
+  }
+
+  const { skip, limit } = Pagination.toParams(query.page, query.limit);
+  const since = new Date(Date.now() - query.days * Duration.toMs("1d"));
+  const [files, totalItems] = await Promise.all([
+    FileRepository.listRecentFiles(userId, { since, skip, limit }),
+    FileRepository.countRecentFiles(userId, since),
+  ]);
+
+  const locations = await resolveLocationNames(
+    userId,
+    files.map((file) => file.parentDirId),
+    user.storage.rootDirId
+  );
+
+  const withLocation: FileProfileWithLocation[] = files.map((file) => ({
+    ...toFileProfile(file),
+    location: locations.get(file.parentDirId.toString()) ?? "",
+  }));
+
+  return {
+    files: withLocation,
+    meta: Pagination.buildPaginationMeta(query.page, query.limit, totalItems),
+  };
 }
 
 export async function moveFile(

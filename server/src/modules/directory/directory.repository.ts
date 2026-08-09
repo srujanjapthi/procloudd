@@ -118,6 +118,13 @@ export function countTrashRootDirectories(userId: Types.ObjectId) {
   });
 }
 
+export async function deleteAllTrashed(
+  userId: Types.ObjectId,
+  session: ClientSession
+): Promise<void> {
+  await Directory.deleteMany({ userId, status: "trashed" }, { session });
+}
+
 export function findAllTrashRootDirectories(userId: Types.ObjectId) {
   return Directory.find({
     userId,
@@ -345,4 +352,31 @@ export function countActiveFiles(
   parentDirId: Types.ObjectId
 ) {
   return File.countDocuments({ userId, parentDirId, status: "active" });
+}
+
+export async function setStarred(id: Types.ObjectId, starred: boolean) {
+  return Directory.findOneAndUpdate(
+    { _id: id },
+    { $set: { starred } },
+    { returnDocument: "after", timestamps: false }
+  ).lean();
+}
+
+export function listStarredDirectories(
+  userId: Types.ObjectId,
+  options: { sort: Record<string, SortOrder>; skip: number; limit: number }
+) {
+  return Directory.find({ userId, status: "active", starred: true })
+    .sort(options.sort)
+    .skip(options.skip)
+    .limit(options.limit)
+    .lean();
+}
+
+export function countStarredDirectories(userId: Types.ObjectId) {
+  return Directory.countDocuments({
+    userId,
+    status: "active",
+    starred: true,
+  });
 }
