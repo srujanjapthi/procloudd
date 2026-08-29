@@ -8,14 +8,24 @@ await connectRedis();
 await Sessions.init();
 
 const { default: app } = await import("@/app.js");
+let isShuttingDown = false;
 
 app.listen(env.PORT, () => {
   console.log(`App is running on http://localhost:${env.PORT}`);
 });
 
 async function shutdown(): Promise<void> {
-  await Promise.all([disconnectDB(), disconnectRedis()]);
-  process.exit(0);
+  if (isShuttingDown) return;
+
+  isShuttingDown = true;
+
+  try {
+    await Promise.all([disconnectDB(), disconnectRedis()]);
+  } catch (err) {
+    console.error("Error during shutdown:", err);
+  } finally {
+    process.exit(0);
+  }
 }
 
 process.on("SIGINT", shutdown);
